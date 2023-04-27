@@ -132,7 +132,7 @@ const MIDIHandler = () => {
 
   return (
     <Box>
-      <Box className="theme-transition">
+      {/* <Box className="theme-transition">
         <Typography
           sx={{
             position: "absolute",
@@ -147,7 +147,7 @@ const MIDIHandler = () => {
         >
           Key: {key}
         </Typography>
-      </Box>
+      </Box> */}
       <Box
         className="theme-transition"
         sx={{
