@@ -1,0 +1,16 @@
+html,
+body {
+  margin: 0;
+}
+
+html * {
+  font-family: "Outfit", sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body,
+.theme-transition * {
+  transition: background-color 0.5s, color 0.5s, border-color 0.5s, stroke 0.5s,
+    fill 0.5s;
+}
