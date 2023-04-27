@@ -2,7 +2,7 @@
   "private": true,
   "name": "chord-voicings",
   "description": "A detect and search chord app",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Roger Simon",
   "main": "app/background.js",
   "scripts": {
