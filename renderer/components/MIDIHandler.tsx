@@ -171,7 +171,7 @@ const MIDIHandler = () => {
                     : darkModeFontColor,
               }}
             >
-              Roger Simon
+              no midi input devices
             </Typography>
           </>
         ) : (
