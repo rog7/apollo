@@ -2,13 +2,13 @@
   "private": true,
   "name": "chord-voicings",
   "description": "A detect and search chord app",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Roger Simon",
   "main": "app/background.js",
   "scripts": {
     "dev": "nextron",
     "build": "electron-builder build --mac --win --publish never",
-    "deploy": "electron-builder build --mac --win --publish always",
+    "deploy": "electron-builder build --mac --publish always",
     "postinstall": "electron-builder install-app-deps",
     "release": "electron-builder"
   },

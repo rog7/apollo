@@ -28,7 +28,6 @@ const MIDIHandler = () => {
   const [pitchValues, setPitchValues] = useState<number[]>([]);
   const { color } = useContext(ColorContext);
   const midiSetUpComplete = useRef(false);
-  const { showAltChords } = useContext(AltChordsContext);
   const { theme } = useContext(ThemeContext);
 
   const { midiInputs, setMidiInputs } = useContext(MidiInputsContext);
