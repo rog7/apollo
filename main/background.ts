@@ -1,7 +1,7 @@
-import { Menu, app } from "electron";
+import { Menu, app, ipcMain, ipcRenderer } from "electron";
 import serve from "electron-serve";
 import { createWindow } from "./helpers";
-import "update-electron-app";
+import { autoUpdater } from "electron-updater";
 
 const isProd: boolean = process.env.NODE_ENV === "production";
 
@@ -18,6 +18,29 @@ if (isProd) {
     width: 1337,
     height: 700,
     resizable: false,
+  });
+
+  if (isProd) {
+    mainWindow.once("ready-to-show", () => {
+      autoUpdater.checkForUpdatesAndNotify();
+    });
+  }
+
+  autoUpdater.on("update-available", () => {
+    console.log("update available");
+    mainWindow.webContents.send("update_available");
+  });
+  autoUpdater.on("update-downloaded", () => {
+    console.log("update downloaded");
+    mainWindow.webContents.send("update_downloaded");
+  });
+
+  ipcMain.on("app_version", (event) => {
+    event.sender.send("app_version", { version: app.getVersion() });
+  });
+
+  ipcMain.on("restart_app", () => {
+    autoUpdater.quitAndInstall();
   });
 
   // const menuTemplate = [

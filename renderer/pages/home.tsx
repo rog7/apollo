@@ -11,6 +11,7 @@ import {
   lightModeBackgroundColor,
 } from "../utils/styles";
 import SearchMode from "../components/SearchMode";
+import IPCRendererSetup from "../components/IPCRendererSetup";
 
 interface ColorContextType {
   color: string;
@@ -145,6 +146,7 @@ export default function Home() {
                   {/* <CssBaseline /> */}
                   <Box>
                     <NonSSRComponent>
+                      <IPCRendererSetup />
                       <Menu />
                       {mode === "detect mode" ? (
                         <MIDIHandler />

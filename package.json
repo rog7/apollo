@@ -2,13 +2,15 @@
   "private": true,
   "name": "chord-voicings",
   "description": "A detect and search chord app",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "author": "Roger Simon",
   "main": "app/background.js",
   "scripts": {
     "dev": "nextron",
-    "build": "nextron build --mac --win --linux",
-    "postinstall": "electron-builder install-app-deps"
+    "build": "electron-builder build --mac --win --publish never",
+    "deploy": "electron-builder build --mac --win --publish always",
+    "postinstall": "electron-builder install-app-deps",
+    "release": "electron-builder"
   },
   "dependencies": {
     "@emotion/react": "^11.10.6",
@@ -18,11 +20,11 @@
     "animate.css": "^4.1.1",
     "electron-serve": "^1.1.0",
     "electron-store": "^8.1.0",
+    "electron-updater": "^5.3.0",
     "framer-motion": "^10.12.4",
     "node-localstorage": "^2.2.1",
     "react-color": "^2.19.3",
     "tonal": "^4.14.0",
-    "update-electron-app": "^2.0.1",
     "webmidi": "^3.1.5"
   },
   "devDependencies": {
@@ -42,9 +44,8 @@
       "hardenedRuntime": true
     }
   },
-  "repository": "https://github.com/rog7/chord-app",
-  "publish": {
-    "provider": "github",
-    "releaseType": "release"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rog7/chord-app"
   }
 }
