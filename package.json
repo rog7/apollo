@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "chord-voicings",
-  "description": "My application description",
+  "description": "A detect and search chord app",
   "version": "1.0.0",
   "author": "Roger Simon",
   "main": "app/background.js",
@@ -16,13 +16,13 @@
     "@mui/material": "^5.11.16",
     "@tonaljs/chord-detect": "^4.8.0",
     "animate.css": "^4.1.1",
-    "dmg-license": "^1.0.11",
     "electron-serve": "^1.1.0",
     "electron-store": "^8.1.0",
     "framer-motion": "^10.12.4",
     "node-localstorage": "^2.2.1",
     "react-color": "^2.19.3",
     "tonal": "^4.14.0",
+    "update-electron-app": "^2.0.1",
     "webmidi": "^3.1.5"
   },
   "devDependencies": {
@@ -41,5 +41,10 @@
     "mac": {
       "hardenedRuntime": true
     }
+  },
+  "repository": "https://github.com/rog7/chord-app",
+  "publish": {
+    "provider": "github",
+    "releaseType": "release"
   }
 }

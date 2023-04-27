@@ -1,5 +1,5 @@
-appId: com.example.nextron
-productName: My Nextron App
+appId: com.suavekeys.chordapp
+productName: A chord app
 copyright: Copyright © 2023 Roger Simon
 directories:
   output: dist
