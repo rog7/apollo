@@ -25,23 +25,26 @@ interface Props {
 
 const SearchMode = ({ noteOnColor }: Props) => {
   const [selectedNotes, setSelectedNotes] = useState<number[]>([]);
-  const midiNumbers = useRef<number[]>([]);
   const [searchResults, setSearchResults] = useState<number[][]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { theme } = useContext(ThemeContext);
-  const index = useRef(0);
   const [currentChord, setCurrentChord] = useState("");
   const [searchResult, setSearchResult] = useState<number[]>([]);
-  const divRef = useRef(null);
   const [altChords, setAltChords] = useState([""]);
-  const textIndex = useRef(0);
+
   const allowNavigation = useRef(false);
-  const texts = ["click below", "play keyboard"];
   const isLeftArrowPressed = useRef(false);
   const isRightArrowPressed = useRef(false);
+  const isEscapePressed = useRef(false);
+  const isEnterPressed = useRef(false);
+  const divRef = useRef(null);
+  const midiNumbers = useRef<number[]>([]);
+  const searchResultsRef = useRef<number[][]>([]);
+  const index = useRef(0);
+  const selectedNotesRef = useRef<number[]>([]);
+
   const { showAltChords } = useContext(AltChordsContext);
   const { key } = useContext(KeyContext);
-  const updateAltChordsDisplay = useRef(true);
+  const { theme } = useContext(ThemeContext);
 
   useEffect(() => {
     if (WebMidi !== undefined) {
@@ -69,6 +72,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
       clearInterval(interval);
     };
   }, []);
@@ -93,7 +97,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
   }, [key]);
 
   function handleKeyDown(event) {
-    if (searchResults.length > 0) {
+    if (searchResultsRef.current.length > 0) {
       if (
         event.key === "ArrowLeft" &&
         allowNavigation.current &&
@@ -105,12 +109,29 @@ const SearchMode = ({ noteOnColor }: Props) => {
       } else if (
         event.key === "ArrowRight" &&
         allowNavigation.current &&
-        index.current !== searchResults.length - 1 &&
+        index.current !== searchResultsRef.current.length - 1 &&
         !isRightArrowPressed.current
       ) {
         isRightArrowPressed.current = true;
         handleGoingForwardInSearchResults();
+      } else if (event.key === "Escape" && !isEscapePressed.current) {
+        isEscapePressed.current = true;
+        cancelSearch();
       }
+    } else if (
+      event.key === "Escape" &&
+      midiNumbers.current.length > 0 &&
+      !isEscapePressed.current
+    ) {
+      isEscapePressed.current = true;
+      cancelSearch();
+    } else if (
+      event.key === "Enter" &&
+      midiNumbers.current.length > 0 &&
+      !isEnterPressed.current
+    ) {
+      isEnterPressed.current = true;
+      handleSearch();
     }
   }
 
@@ -119,13 +140,14 @@ const SearchMode = ({ noteOnColor }: Props) => {
       isLeftArrowPressed.current = false;
     } else if (event.key === "ArrowRight") {
       isRightArrowPressed.current = false;
+    } else if (event.key === "Escape") {
+      isEscapePressed.current = false;
+    } else if (event.key === "Enter") {
+      isEnterPressed.current = false;
     }
   }
 
-  // Add event listener when component mounts
   window.addEventListener("keydown", handleKeyDown);
-
-  // Add event listener when component mounts
   window.addEventListener("keyup", handleKeyUp);
 
   const handleMidiInputs = () => {
@@ -150,47 +172,18 @@ const SearchMode = ({ noteOnColor }: Props) => {
           return a - b;
         });
 
+        selectedNotesRef.current = midiNumbers.current;
         setSelectedNotes(midiNumbers.current);
       } else if (status === 128 || (status === 144 && velocity === 0)) {
         midiNumbers.current = midiNumbers.current.filter(
           (value) => value !== pitch
         );
+
+        selectedNotesRef.current = midiNumbers.current;
         setSelectedNotes(midiNumbers.current);
       }
     }
   }
-
-  const whiteKeyStyleOff = {
-    height: "100%",
-    width: "1.92307692%",
-    border: "0.7px solid black",
-    borderTop: "1.7px solid black",
-    backgroundColor: "white",
-  };
-
-  const blackKeyStyleOff = {
-    height: "57%",
-    width: "1%",
-    backgroundColor: "#484848",
-    borderWidth: "1px 2px 8px 2px",
-    borderStyle: "solid",
-    borderColor: "black",
-  };
-
-  const whiteKeyStyleOn = {
-    height: "100%",
-    width: "1.92307692%",
-    border: "0.7px solid black",
-    borderTop: "1.7px solid black",
-    backgroundColor: noteOnColor,
-  };
-
-  const blackKeyStyleOn = {
-    height: "63.8%",
-    width: "1.1%",
-    backgroundColor: noteOnColor,
-    border: "1px solid black",
-  };
 
   const handleClick = (midiNumber: number) => {
     if (selectedNotes.includes(midiNumber)) {
@@ -198,11 +191,13 @@ const SearchMode = ({ noteOnColor }: Props) => {
         (note) => note !== midiNumber
       );
       midiNumbers.current = newMidiNumbers;
-      setSelectedNotes(newMidiNumbers);
+      selectedNotesRef.current = midiNumbers.current;
+      setSelectedNotes(midiNumbers.current);
     } else {
       const newMidiNumbers = selectedNotes.concat(midiNumber);
       midiNumbers.current = newMidiNumbers;
-      setSelectedNotes(newMidiNumbers);
+      selectedNotesRef.current = midiNumbers.current;
+      setSelectedNotes(midiNumbers.current);
     }
   };
 
@@ -213,7 +208,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
 
     const tempValues = midiNumbersArray
       .filter((midiNumbers) =>
-        selectedNotes.every((value) => midiNumbers.includes(value))
+        selectedNotesRef.current.every((value) => midiNumbers.includes(value))
       )
       .sort(randomFn);
 
@@ -247,6 +242,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
           )
       );
 
+      searchResultsRef.current = values;
       allowNavigation.current = true;
       setCurrentChord(mainChord);
       setSearchResult(values[index.current]);
@@ -257,8 +253,10 @@ const SearchMode = ({ noteOnColor }: Props) => {
 
   const cancelSearch = () => {
     setSearchResults([]);
+    selectedNotesRef.current = [];
     setSelectedNotes([]);
     setSearchResult([]);
+    searchResultsRef.current = [];
     index.current = 0;
     allowNavigation.current = false;
     midiNumbers.current = [];
@@ -270,11 +268,11 @@ const SearchMode = ({ noteOnColor }: Props) => {
     index.current -= 1;
 
     const chords = detect(
-      searchResults[index.current].map((value) => Note.fromMidi(value)),
+      searchResultsRef.current[index.current].map((value) =>
+        Note.fromMidi(value)
+      ),
       { assumePerfectFifth: true }
     );
-
-    console.log("key", getItem("key-preference"));
 
     const mainChord = convertChordToCorrectKey(
       chords[0],
@@ -289,7 +287,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
         )
     );
 
-    setSearchResult(searchResults[index.current]);
+    setSearchResult(searchResultsRef.current[index.current]);
 
     setCurrentChord(mainChord);
   };
@@ -298,7 +296,9 @@ const SearchMode = ({ noteOnColor }: Props) => {
     index.current += 1;
 
     const chords = detect(
-      searchResults[index.current].map((value) => Note.fromMidi(value)),
+      searchResultsRef.current[index.current].map((value) =>
+        Note.fromMidi(value)
+      ),
       { assumePerfectFifth: true }
     );
 
@@ -315,9 +315,41 @@ const SearchMode = ({ noteOnColor }: Props) => {
         )
     );
 
-    setSearchResult(searchResults[index.current]);
+    setSearchResult(searchResultsRef.current[index.current]);
 
     setCurrentChord(mainChord);
+  };
+
+  const whiteKeyStyleOff = {
+    height: "100%",
+    width: "1.92307692%",
+    border: "0.7px solid black",
+    borderTop: "1.7px solid black",
+    backgroundColor: "white",
+  };
+
+  const blackKeyStyleOff = {
+    height: "57%",
+    width: "1%",
+    backgroundColor: "#484848",
+    borderWidth: "1px 2px 8px 2px",
+    borderStyle: "solid",
+    borderColor: "black",
+  };
+
+  const whiteKeyStyleOn = {
+    height: "100%",
+    width: "1.92307692%",
+    border: "0.7px solid black",
+    borderTop: "1.7px solid black",
+    backgroundColor: noteOnColor,
+  };
+
+  const blackKeyStyleOn = {
+    height: "63.8%",
+    width: "1.1%",
+    backgroundColor: noteOnColor,
+    border: "1px solid black",
   };
 
   return (
@@ -337,20 +369,21 @@ const SearchMode = ({ noteOnColor }: Props) => {
           }}
         >
           {selectedNotes.length === 0 ? (
-            <Typography
-              variant="h4"
-              sx={{
-                fontFamily: { fontFamily },
-                fontWeight: "400",
-                color:
-                  theme === "light-mode"
-                    ? lightModeFontColor
-                    : darkModeFontColor,
-              }}
-            >
-              {texts[textIndex.current]}
-            </Typography>
+            <></>
           ) : (
+            // <Typography
+            //   variant="h4"
+            //   sx={{
+            //     fontFamily: { fontFamily },
+            //     fontWeight: "400",
+            //     color:
+            //       theme === "light-mode"
+            //         ? lightModeFontColor
+            //         : darkModeFontColor,
+            //   }}
+            // >
+            //   play a note to activate search mode
+            // </Typography>
             <Box
               ref={divRef}
               className="animate__animated search"
@@ -453,7 +486,6 @@ const SearchMode = ({ noteOnColor }: Props) => {
                       {currentChord}
                     </Typography>
                     {showAltChords &&
-                      updateAltChordsDisplay.current &&
                       altChords.map((value, index) => (
                         <Typography
                           sx={{
@@ -489,6 +521,32 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   <ArrowForwardSymbol />
                 </Box>
               </Box>
+              {searchResults.length !== 1 && (
+                <Box
+                  className="theme-transition"
+                  sx={{
+                    position: "absolute",
+                    bottom: "150px",
+                    textAlign: "center",
+                    width: "100%",
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontFamily: { fontFamily },
+                      fontWeight: "400",
+                      color:
+                        theme === "light-mode"
+                          ? lightModeFontColor
+                          : darkModeFontColor,
+                      opacity: 0.5,
+                    }}
+                  >
+                    {index.current + 1} / {searchResults.length}
+                  </Typography>
+                </Box>
+              )}
             </Box>
           ) : (
             <Box
@@ -523,7 +581,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
           )}
         </>
       )}
-      <Box sx={{ position: "absolute", bottom: "0px" }}>
+      <Box sx={{ position: "fixed", bottom: "0px" }}>
         {!isSearching ? (
           <Box
             sx={{

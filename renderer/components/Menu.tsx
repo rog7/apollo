@@ -122,7 +122,7 @@ const Menu = () => {
           }}
           onClick={() => handleDropdownChange("KEY")}
         >
-          {/* <KeySymbol /> */}
+          <KeySymbol />
           <Typography
             sx={{
               fontFamily: { fontFamily },

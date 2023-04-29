@@ -1,16 +1,16 @@
 {
   "private": true,
-  "name": "chord-voicings",
-  "description": "A detect and search chord app",
-  "version": "1.0.7",
+  "name": "wavs",
+  "description": "An app to discover new chord voicings",
+  "version": "1.0.0",
   "author": "Roger Simon",
   "main": "app/background.js",
+  "productName": "wavs",
   "scripts": {
     "dev": "nextron",
-    "build": "electron-builder build --mac --win --publish never",
-    "deploy": "electron-builder build --mac --win --publish always",
-    "postinstall": "electron-builder install-app-deps",
-    "release": "electron-builder"
+    "clean": "rm -rf dist app",
+    "build": "npm run clean && nextron build --all",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "@emotion/react": "^11.10.6",
@@ -24,6 +24,7 @@
     "framer-motion": "^10.12.4",
     "node-localstorage": "^2.2.1",
     "react-color": "^2.19.3",
+    "react-toastify": "^9.1.2",
     "tonal": "^4.14.0",
     "webmidi": "^3.1.5"
   },
@@ -48,6 +49,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rog7/chord-app"
+    "url": "https://github.com/rog7/wavs"
   }
 }

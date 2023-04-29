@@ -1,4 +1,3 @@
-import CssBaseline from "@mui/material/CssBaseline";
 import MIDIHandler from "../components/MIDIHandler";
 import { createContext, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
@@ -11,7 +10,7 @@ import {
   lightModeBackgroundColor,
 } from "../utils/styles";
 import SearchMode from "../components/SearchMode";
-import IPCRendererSetup from "../components/IPCRendererSetup";
+import UpdateSoftwareNotification from "../components/UpdateSoftwareNotification";
 
 interface ColorContextType {
   color: string;
@@ -143,10 +142,9 @@ export default function Home() {
             >
               <MidiInputsContext.Provider value={{ midiInputs, setMidiInputs }}>
                 <ThemeContext.Provider value={{ theme, setTheme }}>
-                  {/* <CssBaseline /> */}
                   <Box>
                     <NonSSRComponent>
-                      <IPCRendererSetup />
+                      <UpdateSoftwareNotification />
                       <Menu />
                       {mode === "detect mode" ? (
                         <MIDIHandler />

@@ -171,7 +171,7 @@ const MIDIHandler = () => {
                     : darkModeFontColor,
               }}
             >
-              no midi input devices
+              no midi input devices detected
             </Typography>
           </>
         ) : (
@@ -217,7 +217,7 @@ const MIDIHandler = () => {
         )}
       </Box>
 
-      <Box sx={{ position: "absolute", bottom: "0" }}>
+      <Box sx={{ position: "fixed", bottom: "0" }}>
         <Piano midiNumbers={pitchValues} noteOnColor={color} />
       </Box>
     </Box>

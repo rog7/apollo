@@ -1,5 +1,5 @@
-appId: com.suavekeys.chordapp
-productName: A chord app
+appId: com.suavekeys.wavs
+productName: wavs
 copyright: Copyright © 2023 Roger Simon
 directories:
   output: dist
@@ -9,6 +9,3 @@ files:
     filter:
       - package.json
       - app
-publish:
-  provider: github
-  token: ${env.GH_TOKEN}

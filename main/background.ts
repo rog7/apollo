@@ -1,4 +1,4 @@
-import { Menu, app, ipcMain, ipcRenderer } from "electron";
+import { Menu, app, ipcMain } from "electron";
 import serve from "electron-serve";
 import { createWindow } from "./helpers";
 import { autoUpdater } from "electron-updater";
@@ -18,48 +18,40 @@ if (isProd) {
     width: 1337,
     height: 700,
     resizable: false,
+    maximizable: false,
   });
 
   if (isProd) {
     mainWindow.once("ready-to-show", () => {
       autoUpdater.checkForUpdatesAndNotify();
     });
+
+    autoUpdater.on("update-downloaded", () => {
+      mainWindow.webContents.send("update_downloaded");
+    });
+
+    ipcMain.on("restart_app", () => {
+      autoUpdater.quitAndInstall();
+    });
   }
 
-  autoUpdater.on("update-available", () => {
-    console.log("update available");
-    mainWindow.webContents.send("update_available");
-  });
-  autoUpdater.on("update-downloaded", () => {
-    console.log("update downloaded");
-    mainWindow.webContents.send("update_downloaded");
-  });
+  const menuTemplate = [
+    {
+      label: app.getName(),
+      submenu: [
+        {
+          label: "Quit " + app.getName(),
+          click: () => {
+            app.quit();
+          },
+          accelerator: "CmdOrCtrl+Q",
+        },
+      ],
+    },
+  ];
 
-  ipcMain.on("app_version", (event) => {
-    event.sender.send("app_version", { version: app.getVersion() });
-  });
-
-  ipcMain.on("restart_app", () => {
-    autoUpdater.quitAndInstall();
-  });
-
-  // const menuTemplate = [
-  //   {
-  //     label: app.getName(),
-  //     submenu: [
-  //       {
-  //         label: "Quit " + app.getName(),
-  //         click: () => {
-  //           app.quit();
-  //         },
-  //         accelerator: "CmdOrCtrl+Q",
-  //       },
-  //     ],
-  //   },
-  // ];
-
-  // const menu = Menu.buildFromTemplate(menuTemplate);
-  // Menu.setApplicationMenu(menu);
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
 
   if (isProd) {
     await mainWindow.loadURL("app://./home.html");
