@@ -1,11 +1,11 @@
 {
   "private": true,
-  "name": "wavs",
+  "name": "Apollo",
   "description": "An app to discover new chord voicings",
   "version": "1.0.0",
   "author": "Roger Simon",
   "main": "app/background.js",
-  "productName": "wavs",
+  "productName": "Apollo",
   "scripts": {
     "dev": "nextron",
     "clean": "rm -rf dist app",
@@ -43,12 +43,19 @@
   },
   "build": {
     "mac": {
-      "hardenedRuntime": true
+      "hardenedRuntime": true,
+      "icon": "icon-white.icns"
+    },
+    "win": {
+      "icon": "icon-white.ico"
+    },
+    "linux": {
+      "icon": "icon-white.png"
     },
     "afterSign": "scripts/notarize.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rog7/wavs"
+    "url": "https://github.com/rog7/apollo"
   }
 }
