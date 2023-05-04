@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "Apollo",
+  "name": "apollo",
   "description": "An app to discover new chord voicings",
   "version": "1.0.0",
   "author": "Roger Simon",
