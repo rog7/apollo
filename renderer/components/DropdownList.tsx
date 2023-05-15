@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import React, { useContext } from "react";
-import { setItem } from "../utils/localStorage";
+import { getItem, setItem } from "../utils/localStorage";
 import {
   AltChordsContext,
   KeyContext,
@@ -98,8 +98,12 @@ const DropdownList = ({
           >
             {value} {menuItem === "KEY" && value === key && <Checkmark />}
             {menuItem === "OPTIONS" &&
-              value.includes("show alt") &&
-              showAltChords && <Checkmark />}
+            value.includes("show alt") &&
+            getItem("show-alt-chords-preference") === "true" ? (
+              <Checkmark />
+            ) : (
+              <></>
+            )}
           </Box>
         ))}
       </Box>

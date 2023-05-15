@@ -2,14 +2,15 @@
   "private": true,
   "name": "apollo",
   "description": "An app to discover new chord voicings",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Roger Simon",
   "main": "app/background.js",
   "productName": "Apollo",
   "scripts": {
     "dev": "nextron",
-    "clean": "rm -rf dist app",
-    "build": "npm run clean && nextron build --all",
+    "clean": "rm -rf dist app build && mkdir build",
+    "build": "npm run clean && cp -R dist/ build && nextron build --win --ia32 && cp -R dist/ build && npm run build:mac-intel && cp -R dist/ build && rm -r -d build/*/ && find build -type f -name \"* *\" -exec bash -c 'mv \"$0\" \"${0// /-}\"' {} \\;",
+    "build:mac-intel": "arch -x86_64 nextron build -m",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {

@@ -1,5 +1,5 @@
-appId: com.suavekeys.wavs
-productName: wavs
+appId: com.suavekeys.apollo
+productName: apollo
 copyright: Copyright © 2023 Roger Simon
 directories:
   output: dist

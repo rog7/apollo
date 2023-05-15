@@ -98,7 +98,7 @@ const Menu = () => {
                   mode === "detect mode"
                     ? "switch to search mode"
                     : "switch to detect mode",
-                  "show alt chord voicings",
+                  "show alt chord names",
                   theme === "light-mode"
                     ? "switch to dark mode"
                     : "switch to light mode",
