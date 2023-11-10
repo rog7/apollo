@@ -1,10 +1,27 @@
-import { ipcRenderer } from "electron";
-import { useEffect } from "react";
+import { useContext } from "react";
 import { Slide, ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { fontFamily } from "../utils/styles";
+import {
+  LiteVersionNotificationContext,
+  LiteVersionNotificationVisibilityContext,
+} from "../pages/main";
+import { shell } from "electron";
 
-const UpdateSoftwareNotification = () => {
+const LiteVersionNotification = () => {
+  const { setShowLiteVersionNotification } = useContext(
+    LiteVersionNotificationContext
+  );
+
+  const { setliteVersionNotificationVisibility } = useContext(
+    LiteVersionNotificationVisibilityContext
+  );
+
+  const handleClose = () => {
+    setliteVersionNotificationVisibility(false);
+    setShowLiteVersionNotification(false);
+  };
+
   const notify = () =>
     toast(
       <div>
@@ -16,8 +33,7 @@ const UpdateSoftwareNotification = () => {
             textAlign: "center",
           }}
         >
-          A new version is available. <br />
-          Restart the app to apply the changes.
+          This feature is not available <br /> on the lite plan.
         </div>
         <div style={{ textAlign: "center" }}>
           <div
@@ -30,9 +46,9 @@ const UpdateSoftwareNotification = () => {
               borderRadius: "20px",
               cursor: "pointer",
             }}
-            onClick={restartApp}
+            onClick={openBrowser}
           >
-            restart now
+            upgrade
           </div>
         </div>
       </div>,
@@ -46,19 +62,15 @@ const UpdateSoftwareNotification = () => {
         progress: undefined,
         theme: "light",
         transition: Slide,
+        onClose: handleClose,
       }
     );
 
-  useEffect(() => {
-    ipcRenderer.on("update_downloaded", () => {
-      ipcRenderer.removeAllListeners("update_downloaded");
-      notify();
-    });
-  }, []);
-
-  const restartApp = () => {
-    ipcRenderer.send("restart_app");
+  const openBrowser = () => {
+    shell.openExternal("https://buy.stripe.com/28o5mcfVXcOH8Mw005");
   };
+
+  notify();
 
   return (
     <div>
@@ -77,4 +89,4 @@ const UpdateSoftwareNotification = () => {
   );
 };
 
-export default UpdateSoftwareNotification;
+export default LiteVersionNotification;

@@ -1,17 +1,14 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { WebMidi } from "webmidi";
-import Box from "@mui/material/Box";
 import Piano from "./Piano";
 import { detect } from "@tonaljs/chord-detect";
 import { Note } from "tonal";
 import {
-  AltChordsContext,
   ColorContext,
   KeyContext,
   MidiInputsContext,
   ThemeContext,
-} from "../pages/home";
-import { Typography } from "@mui/material";
+} from "../pages/main";
 import convertChordToCorrectKey from "../utils/chordConversion";
 import { getItem } from "../utils/localStorage";
 import {
@@ -130,26 +127,26 @@ const MIDIHandler = () => {
   }
 
   return (
-    <Box>
-      <Box className="theme-transition">
-        <Typography
-          sx={{
+    <div>
+      <div className="theme-transition">
+        <div
+          style={{
             position: "absolute",
             top: "43%",
             left: "5%",
-            fontFamily: { fontFamily },
+            fontFamily: fontFamily,
             fontWeight: "400",
             color:
               theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
+            fontSize: "24px",
           }}
-          variant="h5"
         >
           Key: {key}
-        </Typography>
-      </Box>
-      <Box
+        </div>
+      </div>
+      <div
         className="theme-transition"
-        sx={{
+        style={{
           position: "absolute",
           top: "40%",
           width: "100%",
@@ -160,67 +157,67 @@ const MIDIHandler = () => {
         {midiInputs.length === 0 ? (
           <>
             <MIDIInputSymbol />
-            <Typography
-              variant="h6"
-              sx={{
-                fontFamily: { fontFamily },
+            <div
+              style={{
+                fontFamily: fontFamily,
                 fontWeight: "400",
                 color:
                   theme === "light-mode"
                     ? lightModeFontColor
                     : darkModeFontColor,
+                fontSize: "18px",
               }}
             >
               no midi input devices detected
-            </Typography>
+            </div>
           </>
         ) : (
-          <Box
-            sx={{
+          <div
+            style={{
               color:
                 theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
             }}
           >
-            <Typography
-              variant="h2"
-              sx={{
-                fontFamily: { fontFamily },
+            <div
+              style={{
+                fontFamily: fontFamily,
                 fontWeight: "400",
                 marginBottom: "10px",
                 color:
                   theme === "light-mode"
                     ? lightModeFontColor
                     : darkModeFontColor,
+                fontSize: "48px",
               }}
             >
               {chord.current}
-            </Typography>
+            </div>
             {getItem("show-alt-chords-preference") === "true" &&
               altChords.current.map((value, index) => (
-                <Typography
-                  sx={{
-                    fontFamily: { fontFamily },
+                <div
+                  style={{
+                    fontFamily: fontFamily,
                     fontWeight: "200",
                     marginBottom: "5px",
                     color:
                       theme === "light-mode"
                         ? lightModeFontColor
                         : darkModeFontColor,
+                    fontSize: "24px",
                   }}
-                  variant="h5"
                   key={index}
                 >
                   {value}
-                </Typography>
+                </div>
               ))}
-          </Box>
+          </div>
         )}
-      </Box>
+      </div>
 
-      <Box sx={{ position: "fixed", bottom: "0" }}>
+      <div style={{ position: "fixed", bottom: "0" }}>
         <Piano midiNumbers={pitchValues} noteOnColor={color} />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

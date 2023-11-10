@@ -5,3 +5,4 @@ app
 dist
 electron-builder.yml
 build
+next.config.js

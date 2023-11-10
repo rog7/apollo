@@ -1,11 +1,15 @@
-import Box from "@mui/material/Box";
-import React, { RefObject, useContext, useRef, useState } from "react";
+import React, { useContext, useState } from "react";
 import DropdownList from "./DropdownList";
-import { ColorContext, ModeContext, ThemeContext } from "../pages/home";
+import {
+  ColorContext,
+  LiteVersionNotificationContext,
+  ModeContext,
+  SuiteUserContext,
+  ThemeContext,
+} from "../pages/main";
 import { ColorResult, BlockPicker } from "react-color";
-import { getItem, setItem } from "../utils/localStorage";
+import { setItem } from "../utils/localStorage";
 import ColorSymbol from "./symbols/ColorSymbol";
-import Typography from "@mui/material/Typography";
 import {
   darkModeFontColor,
   fontFamily,
@@ -20,6 +24,10 @@ const Menu = () => {
   const { mode } = useContext(ModeContext);
   const [visibleDropdown, setDropdown] = useState("");
   const { theme } = useContext(ThemeContext);
+  const { isSuiteUser } = useContext(SuiteUserContext);
+  const { triggerUpgradeNotification } = useContext(
+    LiteVersionNotificationContext
+  );
 
   const handleColorChange = (newColor: ColorResult) => {
     setItem("color-preference", newColor.hex);
@@ -36,21 +44,25 @@ const Menu = () => {
 
   window.addEventListener("click", (event) => {
     const menuDiv = document.getElementById("menu-id");
-    if (!menuDiv.contains(event.target as Node)) {
-      setDropdown("");
+    if (menuDiv !== null) {
+      if (!menuDiv.contains(event.target as Node)) {
+        setDropdown("");
+      }
     }
   });
 
   return (
-    <Box
+    <div
       id="menu-id"
       className="theme-transition"
-      sx={{
+      style={{
         width: "39%",
         height: "37px",
         marginTop: "32px",
-        marginX: "auto",
-        paddingX: "70px",
+        marginLeft: "auto",
+        marginRight: "auto",
+        paddingLeft: "70px",
+        paddingRight: "70px",
         textAlign: "center",
         borderWidth: "3px",
         borderStyle: "solid",
@@ -63,9 +75,9 @@ const Menu = () => {
         transition: "border-color 0.5s",
       }}
     >
-      <Box>
-        <Box
-          sx={{
+      <div>
+        <div
+          style={{
             cursor: "pointer",
             display: "flex",
             gap: "5px",
@@ -74,17 +86,17 @@ const Menu = () => {
           onClick={() => handleDropdownChange("OPTIONS")}
         >
           <OptionsSymbol />
-          <Typography
-            sx={{
-              fontFamily: { fontFamily },
+          <div
+            style={{
+              fontFamily: fontFamily,
               fontWeight: "400",
               color:
                 theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
             }}
           >
             OPTIONS
-          </Typography>
-        </Box>
+          </div>
+        </div>
         <AnimatePresence>
           {visibleDropdown === "OPTIONS" && (
             <motion.div
@@ -111,10 +123,10 @@ const Menu = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </Box>
-      <Box>
-        <Box
-          sx={{
+      </div>
+      <div>
+        <div
+          style={{
             cursor: "pointer",
             display: "flex",
             gap: "5px",
@@ -123,17 +135,17 @@ const Menu = () => {
           onClick={() => handleDropdownChange("KEY")}
         >
           <KeySymbol />
-          <Typography
-            sx={{
-              fontFamily: { fontFamily },
+          <div
+            style={{
+              fontFamily: fontFamily,
               fontWeight: "400",
               color:
                 theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
             }}
           >
             KEY
-          </Typography>
-        </Box>
+          </div>
+        </div>
         <AnimatePresence>
           {visibleDropdown === "KEY" && (
             <motion.div
@@ -165,10 +177,10 @@ const Menu = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </Box>
-      <Box>
-        <Box
-          sx={{
+      </div>
+      <div>
+        <div
+          style={{
             cursor: "pointer",
             display: "flex",
             gap: "5px",
@@ -177,17 +189,17 @@ const Menu = () => {
           onClick={() => handleDropdownChange("COLOR")}
         >
           <ColorSymbol />
-          <Typography
-            sx={{
-              fontFamily: { fontFamily },
+          <div
+            style={{
+              fontFamily: fontFamily,
               fontWeight: "400",
               color:
                 theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
             }}
           >
             COLOR
-          </Typography>
-        </Box>
+          </div>
+        </div>
         <AnimatePresence>
           {visibleDropdown === "COLOR" && (
             <motion.div
@@ -196,8 +208,8 @@ const Menu = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.1 }}
             >
-              <Box
-                sx={{
+              <div
+                style={{
                   position: "absolute",
                   top: "85px",
                   left: "61%",
@@ -218,15 +230,18 @@ const Menu = () => {
                     "#DDCCCC",
                     "#D6EACE",
                   ]}
-                  onChange={handleColorChange}
+                  onChange={
+                    isSuiteUser ? handleColorChange : triggerUpgradeNotification
+                  }
+                  className="premium-feature"
                   disableAlpha={true}
                 />
-              </Box>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

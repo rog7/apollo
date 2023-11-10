@@ -1,164 +1,215 @@
-import MIDIHandler from "../components/MIDIHandler";
-import { createContext, useEffect, useState } from "react";
-import Box from "@mui/material/Box";
-import { getItem, setItem } from "../utils/localStorage";
-import NonSSRComponent from "../components/NonSSRComponent";
-import Menu from "../components/Menu";
-import { Input, WebMidi } from "webmidi";
 import {
-  darkModeBackgroundColor,
-  lightModeBackgroundColor,
+  darkModeFontColor,
+  fontFamily,
+  lightModeFontColor,
 } from "../utils/styles";
-import SearchMode from "../components/SearchMode";
-import UpdateSoftwareNotification from "../components/UpdateSoftwareNotification";
+import ApolloSymbol from "../components/symbols/ApolloSymbol";
+import { useEffect, useState } from "react";
+import Main from "./main";
+import * as ColorUtils from "../utils/determineColors";
+import { getItem } from "../utils/localStorage";
 
-interface ColorContextType {
-  color: string;
-  setColor: React.Dispatch<React.SetStateAction<string>>;
-}
+const Home = () => {
+  const [email, setEmail] = useState("");
+  const [showMain, setShowMain] = useState(false);
+  const [errorPlaceholder, setErrorPlaceholder] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-export const ColorContext = createContext<ColorContextType>({
-  color: "",
-  setColor: () => {},
-});
-
-interface KeyContextType {
-  key: string;
-  setKey: React.Dispatch<React.SetStateAction<string>>;
-}
-
-export const KeyContext = createContext<KeyContextType>({
-  key: "",
-  setKey: () => {},
-});
-
-interface ModeContextType {
-  mode: string;
-  setMode: React.Dispatch<React.SetStateAction<string>>;
-}
-
-export const ModeContext = createContext<ModeContextType>({
-  mode: "",
-  setMode: () => {},
-});
-
-interface AltChordsContextType {
-  showAltChords: boolean;
-  setShowAltChords: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-export const AltChordsContext = createContext<AltChordsContextType>({
-  showAltChords: false,
-  setShowAltChords: () => {},
-});
-
-interface MidiInputsContextType {
-  midiInputs: Input[];
-  setMidiInputs: React.Dispatch<React.SetStateAction<Input[]>>;
-}
-
-export const MidiInputsContext = createContext<MidiInputsContextType>({
-  midiInputs: [],
-  setMidiInputs: () => {},
-});
-
-interface ThemeContextType {
-  theme: string;
-  setTheme: React.Dispatch<React.SetStateAction<string>>;
-}
-
-export const ThemeContext = createContext<ThemeContextType>({
-  theme: "",
-  setTheme: () => {},
-});
-
-export default function Home() {
-  let colorPreference: string;
-  let keyPreference: string;
-  let modePreference: string;
-  let showAltChordsPreference: boolean;
-  let themePreference: string;
-
-  if (getItem("color-preference") === null) {
-    colorPreference = "#ceb695";
-    setItem("color-preference", colorPreference);
-  } else {
-    colorPreference = getItem("color-preference") as string;
-  }
-
-  if (getItem("key-preference") === null) {
-    keyPreference = "C";
-    setItem("key-preference", keyPreference);
-  } else {
-    keyPreference = getItem("key-preference") as string;
-  }
-
-  if (getItem("mode-preference") === null) {
-    modePreference = "detect mode";
-    setItem("mode-preference", modePreference);
-  } else {
-    modePreference = getItem("mode-preference") as string;
-  }
-
-  if (getItem("show-alt-chords-preference") === null) {
-    showAltChordsPreference = false;
-    setItem("show-alt-chords-preference", showAltChordsPreference);
-  } else {
-    showAltChordsPreference = getItem("show-alt-chords-preference") as boolean;
-  }
-
-  if (getItem("theme-preference") === null) {
-    themePreference = "light-mode";
-    setItem("theme-preference", themePreference);
-  } else {
-    themePreference = getItem("theme-preference") as string;
-  }
-
-  const [color, setColor] = useState(colorPreference);
-  const [key, setKey] = useState(keyPreference);
-  const [mode, setMode] = useState(modePreference);
-  const [showAltChords, setShowAltChords] = useState(showAltChordsPreference);
-  const [midiInputs, setMidiInputs] = useState<Input[]>([]);
-  const [theme, setTheme] = useState(themePreference);
+  const API_BASE_URL =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "http://3.86.102.164:3000";
 
   useEffect(() => {
-    WebMidi.enable();
+    if (getItem("color-preference") !== null) {
+      setShowMain(true);
+    }
+    setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    document.body.style.backgroundColor =
-      theme === "light-mode"
-        ? lightModeBackgroundColor
-        : darkModeBackgroundColor;
-  }, [theme]);
+  const authorizeUser = async () => {
+    if (email === "") {
+      setErrorPlaceholder("email is required");
+      return;
+    }
 
-  return (
-    <>
-      <ColorContext.Provider value={{ color, setColor }}>
-        <KeyContext.Provider value={{ key, setKey }}>
-          <ModeContext.Provider value={{ mode, setMode }}>
-            <AltChordsContext.Provider
-              value={{ showAltChords, setShowAltChords }}
+    const obj = {
+      email,
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/authorize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(obj),
+      });
+      const data = await response.json();
+
+      if (response.status === 200) {
+        setErrorPlaceholder("");
+        setShowMain(true);
+      } else {
+        const attemptsRemaining = parseInt(
+          response.headers.get("RateLimit-Remaining")
+        );
+        if (attemptsRemaining < 5) {
+          if (attemptsRemaining === 0) {
+            const timeReset = Math.ceil(
+              parseInt(response.headers.get("RateLimit-Reset")) / 60
+            );
+            if (timeReset == 1) {
+              setErrorPlaceholder(
+                `you have ${attemptsRemaining} attempts remaining. please try again in ${timeReset} minute.`
+              );
+            } else {
+              setErrorPlaceholder(
+                `you have ${attemptsRemaining} attempts remaining. please try again in ${timeReset} minutes.`
+              );
+            }
+          } else {
+            if (attemptsRemaining == 1) {
+              setErrorPlaceholder(
+                `for security purposes, you have ${attemptsRemaining} attempt remaining.`
+              );
+            } else {
+              setErrorPlaceholder(
+                `for security purposes, you have ${attemptsRemaining} attempts remaining.`
+              );
+            }
+          }
+        } else {
+          setErrorPlaceholder(data.message);
+        }
+      }
+    } catch (error) {
+      setErrorPlaceholder(
+        "logging in is currently unavailable. please try again later."
+      );
+    }
+  };
+
+  return !isLoading ? (
+    showMain ? (
+      <Main />
+    ) : (
+      <div
+        style={{
+          width: "100%",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          backgroundColor: ColorUtils.determineBackgroundColor(),
+        }}
+      >
+        <div
+          style={{
+            width: "352px",
+            height: "240px",
+            borderRadius: "43px 43px 43px 43px",
+            border: "3px solid #E5E4DB",
+            backgroundColor: ColorUtils.determineBackgroundColorForLogin(),
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            paddingTop: "40px",
+            paddingBottom: "40px",
+          }}
+        >
+          <div>
+            <ApolloSymbol />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "30px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
             >
-              <MidiInputsContext.Provider value={{ midiInputs, setMidiInputs }}>
-                <ThemeContext.Provider value={{ theme, setTheme }}>
-                  <Box>
-                    <NonSSRComponent>
-                      <UpdateSoftwareNotification />
-                      <Menu />
-                      {mode === "detect mode" ? (
-                        <MIDIHandler />
-                      ) : (
-                        <SearchMode noteOnColor={color} />
-                      )}
-                    </NonSSRComponent>
-                  </Box>
-                </ThemeContext.Provider>
-              </MidiInputsContext.Provider>
-            </AltChordsContext.Provider>
-          </ModeContext.Provider>
-        </KeyContext.Provider>
-      </ColorContext.Provider>
-    </>
+              <div
+                style={{
+                  width: "280px",
+                  height: "53px",
+                  borderRadius: "50px",
+                  border: `3px solid ${ColorUtils.determineBorderColor()}`,
+                  display: "flex",
+                  justifyContent: "center",
+                  marginTop: "40px",
+                }}
+              >
+                <input
+                  style={{
+                    borderRadius: "50px",
+                    border: "none",
+                    fontSize: "1.5rem",
+                    width: "95%",
+                    outline: "none",
+                    paddingLeft: "15px",
+                    backgroundColor:
+                      ColorUtils.determineBackgroundColorForLogin(),
+                    color: ColorUtils.determineFontColor(),
+                  }}
+                  placeholder="email"
+                  spellCheck="false"
+                  onChange={(e) => setEmail(e.target.value.trim())}
+                />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontFamily: fontFamily,
+                    color: ColorUtils.determineErrorColor(),
+                    fontSize: "12px",
+                    maxWidth: "250px",
+                    textAlign: "center",
+                    marginTop: "5px",
+                  }}
+                >
+                  {errorPlaceholder}
+                </div>
+              </div>
+              <div
+                style={{
+                  width: "213px",
+                  height: "53px",
+                  borderRadius: "50px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: "10px",
+                  cursor: "pointer",
+                  backgroundColor: ColorUtils.determineBackgroundColorReverse(),
+                }}
+                onClick={authorizeUser}
+              >
+                <div
+                  style={{
+                    fontFamily: fontFamily,
+                    fontSize: "1.4rem",
+                    color: ColorUtils.determineFontColorReverse(),
+                  }}
+                >
+                  authorize
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  ) : (
+    <></>
   );
-}
+};
+
+export default Home;

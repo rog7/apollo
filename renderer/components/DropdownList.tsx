@@ -1,12 +1,12 @@
-import Box from "@mui/material/Box";
 import React, { useContext } from "react";
 import { getItem, setItem } from "../utils/localStorage";
 import {
   AltChordsContext,
   KeyContext,
   ModeContext,
+  SuiteUserContext,
   ThemeContext,
-} from "../pages/home";
+} from "../pages/main";
 import Checkmark from "./symbols/Checkmark";
 import {
   darkModeBackgroundColor,
@@ -34,6 +34,7 @@ const DropdownList = ({
   const { setMode } = useContext(ModeContext);
   const { theme, setTheme } = useContext(ThemeContext);
   const { key } = useContext(KeyContext);
+  const { isSuiteUser } = useContext(SuiteUserContext);
 
   const setPreference = (preference: string) => {
     if (menuItem === "OPTIONS" && preference.includes("show alt")) {
@@ -59,8 +60,8 @@ const DropdownList = ({
 
   return (
     <>
-      <Box
-        sx={{
+      <div
+        style={{
           display: "flex",
           flexDirection: "column",
           position: "absolute",
@@ -71,7 +72,8 @@ const DropdownList = ({
           borderColor:
             theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
           paddingTop: "11px",
-          paddingX: paddingX,
+          paddingLeft: paddingX,
+          paddingRight: paddingX,
           left: leftPosition,
           width: width,
           color:
@@ -84,8 +86,8 @@ const DropdownList = ({
         }}
       >
         {dropdownList.map((value, index) => (
-          <Box
-            sx={{
+          <div
+            style={{
               fontSize: "16px",
               paddingBottom: "8px",
               cursor: "pointer",
@@ -93,8 +95,9 @@ const DropdownList = ({
               color:
                 theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
             }}
-            onClick={() => setPreference(value)}
+            onClick={isSuiteUser ? () => setPreference(value) : null}
             key={index}
+            className={!isSuiteUser ? "premium-feature" : undefined}
           >
             {value} {menuItem === "KEY" && value === key && <Checkmark />}
             {menuItem === "OPTIONS" &&
@@ -104,9 +107,9 @@ const DropdownList = ({
             ) : (
               <></>
             )}
-          </Box>
+          </div>
         ))}
-      </Box>
+      </div>
     </>
   );
 };

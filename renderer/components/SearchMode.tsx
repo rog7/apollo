@@ -1,4 +1,3 @@
-import Box from "@mui/material/Box";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { WebMidi } from "webmidi";
 import ArrowBackSymbol from "./symbols/ArrowBackSymbol";
@@ -9,8 +8,7 @@ import {
   fontFamily,
   lightModeFontColor,
 } from "../utils/styles";
-import Typography from "@mui/material/Typography";
-import { AltChordsContext, KeyContext, ThemeContext } from "../pages/home";
+import { AltChordsContext, KeyContext, ThemeContext } from "../pages/main";
 import CancelSymbol from "./symbols/CancelSymbol";
 import { detect } from "@tonaljs/chord-detect";
 import { Note } from "tonal";
@@ -242,6 +240,8 @@ const SearchMode = ({ noteOnColor }: Props) => {
           )
       );
 
+      // setShowProfileIcon(false);
+
       searchResultsRef.current = values;
       allowNavigation.current = true;
       setCurrentChord(mainChord);
@@ -252,6 +252,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
   };
 
   const cancelSearch = () => {
+    // setShowProfileIcon(true);
     setSearchResults([]);
     selectedNotesRef.current = [];
     setSelectedNotes([]);
@@ -353,76 +354,61 @@ const SearchMode = ({ noteOnColor }: Props) => {
   };
 
   return (
-    <Box>
+    <div>
       {!isSearching ? (
-        <Box
+        <div
           className="theme-transition"
-          sx={{
+          style={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            paddingX: "60px",
             position: "absolute",
-            width: "100%",
+            width: "100vw",
             top: "43%",
-            boxSizing: "border-box",
           }}
         >
           {selectedNotes.length === 0 ? (
             <></>
           ) : (
-            // <Typography
-            //   variant="h4"
-            //   sx={{
-            //     fontFamily: { fontFamily },
-            //     fontWeight: "400",
-            //     color:
-            //       theme === "light-mode"
-            //         ? lightModeFontColor
-            //         : darkModeFontColor,
-            //   }}
-            // >
-            //   play a note to activate search mode
-            // </Typography>
-            <Box
+            <div
               ref={divRef}
               className="animate__animated search"
-              sx={{ cursor: "pointer" }}
+              style={{ cursor: "pointer" }}
               onClick={handleSearch}
             >
               <SearchSymbol />
-            </Box>
+            </div>
           )}
-        </Box>
+        </div>
       ) : (
         <>
           {searchResults.length > 0 ? (
-            <Box>
-              <Box
+            <div>
+              <div
                 className="theme-transition"
-                sx={{
+                style={{
                   position: "absolute",
                   left: "5%",
                   top: "5%",
                 }}
               >
-                <Typography
-                  sx={{
-                    fontFamily: { fontFamily },
+                <div
+                  style={{
+                    fontFamily: fontFamily,
                     fontWeight: "400",
                     color:
                       theme === "light-mode"
                         ? lightModeFontColor
                         : darkModeFontColor,
+                    fontSize: "24px",
                   }}
-                  variant="h5"
                 >
                   Key: {getItem("key-preference")}
-                </Typography>
-              </Box>
-              <Box
+                </div>
+              </div>
+              <div
                 className="theme-transition"
-                sx={{
+                style={{
                   position: "absolute",
                   right: "5%",
                   top: "5%",
@@ -431,24 +417,24 @@ const SearchMode = ({ noteOnColor }: Props) => {
                 onClick={cancelSearch}
               >
                 <CancelSymbol />
-              </Box>
-              <Box
+              </div>
+              <div
                 className="theme-transition"
-                sx={{
+                style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent: "center",
                   alignItems: "center",
-                  paddingX: "60px",
                   position: "absolute",
-                  width: "100%",
+                  width: "100vw",
                   height: "70%",
-                  boxSizing: "border-box",
                 }}
               >
-                <Box
-                  sx={{
+                <div
+                  style={{
                     cursor: index.current === 0 ? "arrow" : "pointer",
                     opacity: index.current === 0 ? 0 : 1,
+                    position: "absolute",
+                    left: "5%",
                   }}
                   onClick={
                     index.current !== 0
@@ -457,11 +443,11 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   }
                 >
                   <ArrowBackSymbol />
-                </Box>
-                <Box>
+                </div>
+                <div>
                   {" "}
-                  <Box
-                    sx={{
+                  <div
+                    style={{
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
@@ -472,45 +458,47 @@ const SearchMode = ({ noteOnColor }: Props) => {
                           : darkModeFontColor,
                     }}
                   >
-                    <Typography
-                      variant="h2"
-                      sx={{
-                        fontFamily: { fontFamily },
+                    <div
+                      style={{
+                        fontFamily: fontFamily,
                         fontWeight: "400",
                         color:
                           theme === "light-mode"
                             ? lightModeFontColor
                             : darkModeFontColor,
+                        fontSize: "48px",
                       }}
                     >
                       {currentChord}
-                    </Typography>
+                    </div>
                     {showAltChords &&
                       altChords.map((value, index) => (
-                        <Typography
-                          sx={{
-                            fontFamily: { fontFamily },
+                        <div
+                          style={{
+                            fontFamily: fontFamily,
                             fontWeight: "200",
                             color:
                               theme === "light-mode"
                                 ? lightModeFontColor
                                 : darkModeFontColor,
+                            fontSize: "24px",
                           }}
-                          variant="h5"
                           key={index}
                         >
                           {value}
-                        </Typography>
+                        </div>
                       ))}
-                  </Box>
-                </Box>
-                <Box
-                  sx={{
+                  </div>
+                </div>
+                <div
+                  style={{
                     cursor:
                       index.current === searchResults.length - 1
                         ? "arrow"
                         : "pointer",
                     opacity: index.current === searchResults.length - 1 ? 0 : 1,
+                    position: "absolute",
+                    right: "5%",
                   }}
                   onClick={
                     index.current !== searchResults.length - 1
@@ -519,39 +507,39 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   }
                 >
                   <ArrowForwardSymbol />
-                </Box>
-              </Box>
+                </div>
+              </div>
               {searchResults.length !== 1 && (
-                <Box
+                <div
                   className="theme-transition"
-                  sx={{
+                  style={{
                     position: "absolute",
                     bottom: "150px",
                     textAlign: "center",
                     width: "100%",
                   }}
                 >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontFamily: { fontFamily },
+                  <div
+                    style={{
+                      fontFamily: fontFamily,
                       fontWeight: "400",
                       color:
                         theme === "light-mode"
                           ? lightModeFontColor
                           : darkModeFontColor,
                       opacity: 0.5,
+                      fontSize: "18px",
                     }}
                   >
                     {index.current + 1} / {searchResults.length}
-                  </Typography>
-                </Box>
+                  </div>
+                </div>
               )}
-            </Box>
+            </div>
           ) : (
-            <Box
+            <div
               className="theme-transition"
-              sx={{
+              style={{
                 display: "flex",
                 alignItems: "center",
                 flexDirection: "column",
@@ -561,1164 +549,1308 @@ const SearchMode = ({ noteOnColor }: Props) => {
                 gap: "20px",
               }}
             >
-              <Box sx={{ cursor: "pointer" }} onClick={cancelSearch}>
+              <div style={{ cursor: "pointer" }} onClick={cancelSearch}>
                 <CancelSymbol />
-              </Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontFamily: { fontFamily },
+              </div>
+              <div
+                style={{
+                  fontFamily: fontFamily,
                   fontWeight: "400",
                   color:
                     theme === "light-mode"
                       ? lightModeFontColor
                       : darkModeFontColor,
+                  fontSize: "24px",
                 }}
               >
                 no chords were found
-              </Typography>
-            </Box>
+              </div>
+            </div>
           )}
         </>
       )}
-      <Box sx={{ position: "fixed", bottom: "0px" }}>
+      <div style={{ position: "fixed", bottom: "0px" }}>
         {!isSearching ? (
-          <Box
-            sx={{
+          <div
+            style={{
               height: "18vh",
               width: "100vw",
               display: "flex",
               cursor: "pointer",
+              position: "relative",
             }}
-            position="relative"
           >
-            <Box
+            <div
               style={
                 selectedNotes.includes(21) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(21)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(22) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="1.22%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(22)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "1.22%",
+              }}
               onClick={() => handleClick(22)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(23) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(23)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(24) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(24)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(25) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="5.06%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(25)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "5.06%",
+              }}
               onClick={() => handleClick(25)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(26) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(26)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(27) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="6.98%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(27)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "6.98%",
+              }}
               onClick={() => handleClick(27)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(28) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(28)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(29) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(29)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(30) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="10.82%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(30)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "10.82%",
+              }}
               onClick={() => handleClick(30)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(31) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(31)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(32) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="12.74%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(32)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "12.74%",
+              }}
               onClick={() => handleClick(32)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(33) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(33)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(34) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="14.66%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(34)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "14.66%",
+              }}
               onClick={() => handleClick(34)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(35) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(35)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(36) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(36)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(37) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="18.5%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(37)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "18.5%",
+              }}
               onClick={() => handleClick(37)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(38) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(38)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(39) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="20.42%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(39)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "20.42%",
+              }}
               onClick={() => handleClick(39)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(40) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(40)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(41) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(41)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(42) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="24.26%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(42)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "24.26%",
+              }}
               onClick={() => handleClick(42)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(43) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(43)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(44) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="26.18%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(44)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "26.18%",
+              }}
               onClick={() => handleClick(44)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(45) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(45)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(46) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="28.1%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(46)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "28.1%",
+              }}
               onClick={() => handleClick(46)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(47) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(47)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(48) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(48)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(49) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="31.94%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(49)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "31.94%",
+              }}
               onClick={() => handleClick(49)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(50) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(50)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(51) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="33.86%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(51)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "33.86%",
+              }}
               onClick={() => handleClick(51)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(52) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(52)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(53) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(53)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(54) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="37.7%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(54)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "37.7%",
+              }}
               onClick={() => handleClick(54)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(55) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(55)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(56) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="39.62%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(56)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "39.62%",
+              }}
               onClick={() => handleClick(56)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(57) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(57)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(58) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="41.54%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(58)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "41.54%",
+              }}
               onClick={() => handleClick(58)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(59) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(59)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(60) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(60)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(61) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="45.38%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(61)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "45.38%",
+              }}
               onClick={() => handleClick(61)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(62) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(62)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(63) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="47.3%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(63)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "47.3%",
+              }}
               onClick={() => handleClick(63)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(64) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(64)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(65) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(65)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(66) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="51.14%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(66)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "51.14%",
+              }}
               onClick={() => handleClick(66)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(67) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(67)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(68) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="53.06%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(68)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "53.06%",
+              }}
               onClick={() => handleClick(68)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(69) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(69)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(70) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="54.98%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(70)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "54.98%",
+              }}
               onClick={() => handleClick(70)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(71) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(71)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(72) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(72)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(73) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="58.82%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(73)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "58.82%",
+              }}
               onClick={() => handleClick(73)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(74) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(74)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(75) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="60.74%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(75)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "60.74%",
+              }}
               onClick={() => handleClick(75)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(76) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(76)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(77) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(77)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(78) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="64.58%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(78)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "64.58%",
+              }}
               onClick={() => handleClick(78)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(79) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(79)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(80) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="66.5%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(80)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "66.5%",
+              }}
               onClick={() => handleClick(80)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(81) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(81)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(82) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="68.42%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(82)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "68.42%",
+              }}
               onClick={() => handleClick(82)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(83) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(83)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(84) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(84)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(85) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="72.26%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(85)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "72.26%",
+              }}
               onClick={() => handleClick(85)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(86) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(86)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(87) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="74.18%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(87)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "74.18%",
+              }}
               onClick={() => handleClick(87)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(88) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(88)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(89) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(89)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(90) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="78.02%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(90)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "78.02%",
+              }}
               onClick={() => handleClick(90)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(91) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(91)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(92) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="79.94%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(92)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "79.94%",
+              }}
               onClick={() => handleClick(92)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(93) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(93)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(94) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="81.86%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(94)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "81.86%",
+              }}
               onClick={() => handleClick(94)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(95) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(95)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(96) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(96)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(97) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="85.7%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(97)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "85.7%",
+              }}
               onClick={() => handleClick(97)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(98) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(98)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(99) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="87.62%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(99)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "87.62%",
+              }}
               onClick={() => handleClick(99)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(100) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(100)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(101) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(101)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(102) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="91.46%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(102)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "91.46%",
+              }}
               onClick={() => handleClick(102)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(103) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(103)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(104) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="93.38%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(104)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "93.38%",
+              }}
               onClick={() => handleClick(104)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(105) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(105)}
-            ></Box>
-            <Box
-              style={
-                selectedNotes.includes(106) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="95.3%"
+            ></div>
+            <div
+              style={{
+                ...(selectedNotes.includes(106)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "95.3%",
+              }}
               onClick={() => handleClick(106)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(107) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(107)}
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 selectedNotes.includes(108) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
               onClick={() => handleClick(108)}
-            ></Box>
-          </Box>
+            ></div>
+          </div>
         ) : (
-          <Box
-            sx={{
+          <div
+            style={{
               height: "18vh",
               width: "100vw",
               display: "flex",
               cursor: "arrow",
+              position: "relative",
             }}
-            position="relative"
           >
-            <Box
+            <div
               style={
                 searchResult.includes(21) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(22) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="1.22%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(22)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "1.22%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(23) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(24) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(25) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="5.06%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(25)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "5.06%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(26) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(27) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="6.98%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(27)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "6.98%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(28) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(29) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(30) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="10.82%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(30)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "10.82%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(31) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(32) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="12.74%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(32)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "12.74%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(33) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(34) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="14.66%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(34)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "14.66%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(35) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(36) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(37) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="18.5%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(37)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "18.5%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(38) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(39) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="20.42%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(39)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "20.42%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(40) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(41) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(42) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="24.26%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(42)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "24.26%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(43) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(44) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="26.18%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(44)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "26.18%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(45) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(46) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="28.1%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(46)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "28.1%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(47) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(48) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(49) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="31.94%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(49)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "31.94%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(50) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(51) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="33.86%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(51)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "33.86%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(52) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(53) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(54) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="37.7%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(54)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "37.7%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(55) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(56) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="39.62%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(56)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "39.62%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(57) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(58) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="41.54%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(58)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "41.54%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(59) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(60) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(61) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="45.38%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(61)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "45.38%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(62) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(63) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="47.3%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(63)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "47.3%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(64) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(65) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(66) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="51.14%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(66)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "51.14%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(67) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(68) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="53.06%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(68)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "53.06%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(69) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(70) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="54.98%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(70)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "54.98%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(71) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(72) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(73) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="58.82%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(73)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "58.82%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(74) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(75) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="60.74%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(75)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "60.74%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(76) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(77) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(78) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="64.58%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(78)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "64.58%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(79) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(80) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="66.5%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(80)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "66.5%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(81) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(82) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="68.42%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(82)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "68.42%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(83) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(84) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(85) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="72.26%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(85)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "72.26%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(86) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(87) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="74.18%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(87)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "74.18%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(88) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(89) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(90) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="78.02%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(90)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "78.02%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(91) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(92) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="79.94%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(92)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "79.94%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(93) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(94) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="81.86%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(94)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "81.86%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(95) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(96) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(97) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="85.7%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(97)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "85.7%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(98) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(99) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="87.62%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(99)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "87.62%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(100) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(101) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(102) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="91.46%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(102)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "91.46%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(103) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(104) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="93.38%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(104)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "93.38%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(105) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
-              style={
-                searchResult.includes(106) ? blackKeyStyleOn : blackKeyStyleOff
-              }
-              position="absolute"
-              left="95.3%"
-            ></Box>
-            <Box
+            ></div>
+            <div
+              style={{
+                ...(searchResult.includes(106)
+                  ? blackKeyStyleOn
+                  : blackKeyStyleOff),
+                position: "absolute",
+                left: "95.3%",
+              }}
+            ></div>
+            <div
               style={
                 searchResult.includes(107) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-            <Box
+            ></div>
+            <div
               style={
                 searchResult.includes(108) ? whiteKeyStyleOn : whiteKeyStyleOff
               }
-            ></Box>
-          </Box>
+            ></div>
+          </div>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 
