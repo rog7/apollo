@@ -21,6 +21,13 @@ if (isProd) {
     maximizable: false,
   });
 
+  // const secondWindow = createWindow("main", {
+  //   width: 1337,
+  //   height: 700,
+  //   resizable: false,
+  //   maximizable: false,
+  // });
+
   if (isProd) {
     mainWindow.once("ready-to-show", () => {
       autoUpdater.checkForUpdatesAndNotify();
@@ -55,10 +62,13 @@ if (isProd) {
 
   if (isProd) {
     await mainWindow.loadURL("app://./home.html");
+    mainWindow.webContents.openDevTools();
   } else {
     const port = process.argv[2];
     await mainWindow.loadURL(`http://localhost:${port}/home`);
+    // await secondWindow.loadURL(`http://localhost:${port}/home`);
     mainWindow.webContents.openDevTools();
+    // secondWindow.webContents.openDevTools();
   }
 })();
 

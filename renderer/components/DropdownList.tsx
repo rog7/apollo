@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { getItem, setItem } from "../utils/localStorage";
 import {
   AltChordsContext,
@@ -14,6 +14,7 @@ import {
   lightModeBackgroundColor,
   lightModeFontColor,
 } from "../utils/styles";
+import ProfileModal from "./ProfileModal";
 
 interface Props {
   dropdownList: string[];
@@ -35,6 +36,7 @@ const DropdownList = ({
   const { theme, setTheme } = useContext(ThemeContext);
   const { key } = useContext(KeyContext);
   const { isSuiteUser } = useContext(SuiteUserContext);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const setPreference = (preference: string) => {
     if (menuItem === "OPTIONS" && preference.includes("show alt")) {
@@ -52,6 +54,9 @@ const DropdownList = ({
     } else if (menuItem === "OPTIONS" && preference.includes("dark mode")) {
       setItem("theme-preference", "dark-mode");
       setTheme("dark-mode");
+    } else if (menuItem === "OPTIONS" && preference.includes("edit profile")) {
+      setShowProfileModal(!showProfileModal);
+      setShowProfileModal(!showProfileModal);
     } else if (menuItem === "KEY") {
       setItem("key-preference", preference);
       setKey(preference);
@@ -61,17 +66,10 @@ const DropdownList = ({
   return (
     <>
       <div
+        className="flex flex-col absolute top-[10%] rounded-bl-4xl rounded-br-4xl border-2 pt-[11px] z-[1] items-center text-center"
         style={{
-          display: "flex",
-          flexDirection: "column",
-          position: "absolute",
-          top: "72px",
-          borderRadius: "0px 0px 50px 50px",
-          borderWidth: "3px",
-          borderStyle: "solid",
           borderColor:
             theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
-          paddingTop: "11px",
           paddingLeft: paddingX,
           paddingRight: paddingX,
           left: leftPosition,
@@ -82,33 +80,42 @@ const DropdownList = ({
             theme === "light-mode"
               ? lightModeBackgroundColor
               : darkModeBackgroundColor,
-          zIndex: 1,
         }}
       >
         {dropdownList.map((value, index) => (
           <div
+            className="cursor-pointer pb-[8px] relative"
             style={{
-              fontSize: "16px",
-              paddingBottom: "8px",
-              cursor: "pointer",
-              width: "100%",
               color:
                 theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
             }}
-            onClick={isSuiteUser ? () => setPreference(value) : null}
+            onClick={() => setPreference(value)}
             key={index}
-            className={!isSuiteUser ? "premium-feature" : undefined}
           >
-            {value} {menuItem === "KEY" && value === key && <Checkmark />}
+            {value}
+            {menuItem === "KEY" && value === key && (
+              <div
+                className={`absolute top-[10%] ${
+                  value.length === 1 ? "left-[22px]" : "left-[25px]"
+                }`}
+              >
+                <Checkmark />
+              </div>
+            )}
             {menuItem === "OPTIONS" &&
             value.includes("show alt") &&
             getItem("show-alt-chords-preference") === "true" ? (
-              <Checkmark />
+              <div className="absolute top-[50%] left-[74%]">
+                <Checkmark />
+              </div>
             ) : (
               <></>
             )}
           </div>
         ))}
+        {showProfileModal && (
+          <ProfileModal setShowProfileModal={setShowProfileModal} />
+        )}
       </div>
     </>
   );

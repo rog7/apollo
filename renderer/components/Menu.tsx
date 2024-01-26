@@ -4,17 +4,14 @@ import {
   ColorContext,
   LiteVersionNotificationContext,
   ModeContext,
+  ShowPracticeRoomContext,
   SuiteUserContext,
   ThemeContext,
 } from "../pages/main";
 import { ColorResult, BlockPicker } from "react-color";
 import { setItem } from "../utils/localStorage";
 import ColorSymbol from "./symbols/ColorSymbol";
-import {
-  darkModeFontColor,
-  fontFamily,
-  lightModeFontColor,
-} from "../utils/styles";
+import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
 import { AnimatePresence, motion } from "framer-motion";
 import KeySymbol from "./symbols/KeySymbol";
 import OptionsSymbol from "./symbols/OptionsSymbol";
@@ -28,7 +25,7 @@ const Menu = () => {
   const { triggerUpgradeNotification } = useContext(
     LiteVersionNotificationContext
   );
-
+  const { showPracticeRoom } = useContext(ShowPracticeRoomContext);
   const handleColorChange = (newColor: ColorResult) => {
     setItem("color-preference", newColor.hex);
     setColor(newColor.hex);
@@ -54,42 +51,20 @@ const Menu = () => {
   return (
     <div
       id="menu-id"
-      className="theme-transition"
+      className="w-[39%] h-[37px] mt-8 mx-auto px-[70px] border-2 rounded-4xl flex justify-between items-center"
       style={{
-        width: "39%",
-        height: "37px",
-        marginTop: "32px",
-        marginLeft: "auto",
-        marginRight: "auto",
-        paddingLeft: "70px",
-        paddingRight: "70px",
-        textAlign: "center",
-        borderWidth: "3px",
-        borderStyle: "solid",
         borderColor:
           theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
-        borderRadius: "50px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        transition: "border-color 0.5s",
       }}
     >
       <div>
         <div
-          style={{
-            cursor: "pointer",
-            display: "flex",
-            gap: "5px",
-            alignItems: "center",
-          }}
+          className="cursor-pointer flex gap-[5px] items-center"
           onClick={() => handleDropdownChange("OPTIONS")}
         >
           <OptionsSymbol />
           <div
             style={{
-              fontFamily: fontFamily,
-              fontWeight: "400",
               color:
                 theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
             }}
@@ -106,18 +81,28 @@ const Menu = () => {
               transition={{ duration: 0.1 }}
             >
               <DropdownList
-                dropdownList={[
-                  mode === "detect mode"
-                    ? "switch to search mode"
-                    : "switch to detect mode",
-                  "show alt chord names",
-                  theme === "light-mode"
-                    ? "switch to dark mode"
-                    : "switch to light mode",
-                ]}
-                leftPosition={"27%"}
-                width={"125px"}
-                paddingX={"25px"}
+                dropdownList={
+                  !showPracticeRoom
+                    ? [
+                        "edit profile",
+                        mode === "detect mode"
+                          ? "switch to search mode"
+                          : "switch to detect mode",
+                        "show alt chord names",
+                        theme === "light-mode"
+                          ? "switch to dark mode"
+                          : "switch to light mode",
+                      ]
+                    : [
+                        "show alt chord names",
+                        theme === "light-mode"
+                          ? "switch to dark mode"
+                          : "switch to light mode",
+                      ]
+                }
+                leftPosition={"33%"}
+                width={"160px"}
+                paddingX={"20px"}
                 menuItem={"OPTIONS"}
               />
             </motion.div>
@@ -126,19 +111,12 @@ const Menu = () => {
       </div>
       <div>
         <div
-          style={{
-            cursor: "pointer",
-            display: "flex",
-            gap: "5px",
-            alignItems: "center",
-          }}
+          className="cursor-pointer flex gap-[5px] items-center"
           onClick={() => handleDropdownChange("KEY")}
         >
           <KeySymbol />
           <div
             style={{
-              fontFamily: fontFamily,
-              fontWeight: "400",
               color:
                 theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
             }}
@@ -169,7 +147,7 @@ const Menu = () => {
                   "F#",
                   "G",
                 ]}
-                leftPosition={"44.5%"}
+                leftPosition={"46%"}
                 width={"40px"}
                 paddingX={"55px"}
                 menuItem={"KEY"}
@@ -180,19 +158,12 @@ const Menu = () => {
       </div>
       <div>
         <div
-          style={{
-            cursor: "pointer",
-            display: "flex",
-            gap: "5px",
-            alignItems: "center",
-          }}
+          className="cursor-pointer flex gap-[5px] items-center"
           onClick={() => handleDropdownChange("COLOR")}
         >
           <ColorSymbol />
           <div
             style={{
-              fontFamily: fontFamily,
-              fontWeight: "400",
               color:
                 theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
             }}
@@ -208,14 +179,7 @@ const Menu = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.1 }}
             >
-              <div
-                style={{
-                  position: "absolute",
-                  top: "85px",
-                  left: "61%",
-                  zIndex: 1,
-                }}
-              >
+              <div className="absolute top-[12%] left-[55%] z-[1]">
                 <BlockPicker
                   color={color}
                   colors={[

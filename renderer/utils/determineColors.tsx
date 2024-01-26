@@ -109,3 +109,11 @@ export const determineErrorColor = () => {
     ? "red"
     : "#FF8080";
 };
+
+export const determineFontColorForCreatingShed = () => {
+  return getItem("theme-preference") === null
+    ? "#313131"
+    : getItem("theme-preference") === "light-mode"
+    ? "#313131"
+    : "#E5E4DB";
+};

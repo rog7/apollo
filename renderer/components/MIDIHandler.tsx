@@ -3,74 +3,46 @@ import { WebMidi } from "webmidi";
 import Piano from "./Piano";
 import { detect } from "@tonaljs/chord-detect";
 import { Note } from "tonal";
-import {
-  ColorContext,
-  KeyContext,
-  MidiInputsContext,
-  ThemeContext,
-} from "../pages/main";
+import { KeyContext, MidiInputContext, ThemeContext } from "../pages/main";
 import convertChordToCorrectKey from "../utils/chordConversion";
 import { getItem } from "../utils/localStorage";
-import {
-  darkModeFontColor,
-  fontFamily,
-  lightModeFontColor,
-} from "../utils/styles";
+import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
 import MIDIInputSymbol from "./symbols/MIDIInputSymbol";
+import { truncate } from "original-fs";
 
-const MIDIHandler = () => {
+interface Props {
+  socket: WebSocket | null;
+  roomName: string | null;
+  playAccess: boolean | null;
+}
+const MIDIHandler = ({ socket, roomName, playAccess }: Props) => {
   const midiNumbers = useRef<number[]>([]);
   const chord = useRef("");
   const altChords = useRef([""]);
   const [pitchValues, setPitchValues] = useState<number[]>([]);
-  const { color } = useContext(ColorContext);
   const midiSetUpComplete = useRef(false);
   const { theme } = useContext(ThemeContext);
 
-  const { midiInputs, setMidiInputs } = useContext(MidiInputsContext);
+  const { midiInput } = useContext(MidiInputContext);
   const { key } = useContext(KeyContext);
+  const [isFootPedalPressed, setIsFootPedalPressed] = useState(false);
 
   useEffect(() => {
-    if (WebMidi !== undefined) {
-      WebMidi.addListener("connected", handleMidiInputs);
-      WebMidi.addListener("disconnected", handleMidiInputs);
-
-      for (const input of WebMidi.inputs) {
-        if (input.id !== "") {
-          input.addListener("noteon", handleMIDIMessage);
-          input.addListener("noteoff", handleMIDIMessage);
-        }
-      }
-
-      if (WebMidi.inputs.length === 0) {
-        setMidiInputs([]);
-      } else {
-        setMidiInputs(WebMidi.inputs);
-      }
+    if (WebMidi !== undefined && midiInput !== null) {
+      midiInput.removeListener("noteon");
+      midiInput.removeListener("noteoff");
+      midiInput.removeListener("midimessage");
+      midiInput.addListener("noteon", handleMIDIMessage);
+      midiInput.addListener("noteoff", handleMIDIMessage);
+      midiInput.addListener("midimessage", handleSustainPedalMessage);
     }
 
+    setIsFootPedalPressed(false);
+    setPitchValues([]);
     midiSetUpComplete.current = true;
-  }, []);
-
-  const handleMidiInputs = () => {
-    if (WebMidi.inputs.length === 0) {
-      midiSetUpComplete.current = true;
-      setMidiInputs([]);
-      chord.current = "";
-      setPitchValues([]);
-    } else {
-      for (const input of WebMidi.inputs) {
-        if (input.id !== null) {
-          input.addListener("noteon", handleMIDIMessage);
-          input.addListener("noteoff", handleMIDIMessage);
-        }
-      }
-
-      midiSetUpComplete.current = true;
-
-      setMidiInputs(WebMidi.inputs);
-    }
-  };
+    chord.current = "";
+    altChords.current = [""];
+  }, [midiInput, playAccess]);
 
   // Function to handle incoming MIDI data
   function handleMIDIMessage(event: any) {
@@ -123,52 +95,103 @@ const MIDIHandler = () => {
 
         setPitchValues(midiNumbers.current);
       }
+
+      if (socket !== null && playAccess) {
+        const obj = {
+          type: "midi",
+          midi_message: [status, pitch, velocity],
+          room_name: roomName,
+          note_on_color: getItem("color-preference"),
+        };
+        socket.send(JSON.stringify(obj));
+      }
+    }
+  }
+
+  function handleSustainPedalMessage(event: any) {
+    if (socket !== null) {
+      if (event.data[0] === 0xb0 && event.data[1] === 64) {
+        const pedalValue = event.data[2]; // Pedal value ranging from 0 to 127
+
+        if (pedalValue === 127) {
+          setIsFootPedalPressed(true);
+        } else {
+          setIsFootPedalPressed(false);
+        }
+
+        const obj = {
+          type: "midi",
+          midi_message: [0xb0, 64, pedalValue],
+          room_name: roomName,
+          note_on_color: getItem("color-preference"),
+        };
+        socket.send(JSON.stringify(obj));
+      }
+    } else {
+      if (event.data[0] === 0xb0 && event.data[1] === 64) {
+        const pedalValue = event.data[2]; // Pedal value ranging from 0 to 127
+
+        if (pedalValue === 127) {
+          setIsFootPedalPressed(true);
+        } else {
+          setIsFootPedalPressed(false);
+        }
+      }
     }
   }
 
   return (
     <div>
-      <div className="theme-transition">
+      <div
+        className="absolute top-[43%] left-[5%] font-normal text-2xl"
+        style={{
+          color:
+            theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
+        }}
+      >
         <div
           style={{
-            position: "absolute",
-            top: "43%",
-            left: "5%",
-            fontFamily: fontFamily,
-            fontWeight: "400",
             color:
               theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
-            fontSize: "24px",
           }}
         >
           Key: {key}
         </div>
       </div>
-      <div
-        className="theme-transition"
-        style={{
-          position: "absolute",
-          top: "40%",
-          width: "100%",
-          textAlign: "center",
-          lineHeight: "32px",
-        }}
-      >
-        {midiInputs.length === 0 ? (
+      <div className="absolute top-[77%] left-[2%] flex gap-[5px] items-center">
+        <div
+          className={`w-3 h-3 rounded-full no-transition border-2 ${
+            isFootPedalPressed ? "bg-teal-600" : "white"
+          }`}
+          style={{
+            borderColor:
+              theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
+          }}
+        ></div>
+        <div
+          className="text-sm"
+          style={{
+            color:
+              theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
+          }}
+        >
+          Sustain
+        </div>
+      </div>
+      <div className="absolute top-[40%] w-full flex flex-col items-center leading-8">
+        {midiInput === null ? (
           <>
             <MIDIInputSymbol />
             <div
+              className="text-lg mt-2"
               style={{
-                fontFamily: fontFamily,
-                fontWeight: "400",
                 color:
                   theme === "light-mode"
                     ? lightModeFontColor
                     : darkModeFontColor,
-                fontSize: "18px",
               }}
             >
-              no midi input devices detected
+              no midi input devices selected
             </div>
           </>
         ) : (
@@ -179,15 +202,12 @@ const MIDIHandler = () => {
             }}
           >
             <div
+              className="mb-2.5 text-5xl text-center"
               style={{
-                fontFamily: fontFamily,
-                fontWeight: "400",
-                marginBottom: "10px",
                 color:
                   theme === "light-mode"
                     ? lightModeFontColor
                     : darkModeFontColor,
-                fontSize: "48px",
               }}
             >
               {chord.current}
@@ -195,15 +215,12 @@ const MIDIHandler = () => {
             {getItem("show-alt-chords-preference") === "true" &&
               altChords.current.map((value, index) => (
                 <div
+                  className="font-extralight mb-[5px] text-2xl text-center"
                   style={{
-                    fontFamily: fontFamily,
-                    fontWeight: "200",
-                    marginBottom: "5px",
                     color:
                       theme === "light-mode"
                         ? lightModeFontColor
                         : darkModeFontColor,
-                    fontSize: "24px",
                   }}
                   key={index}
                 >
@@ -214,8 +231,11 @@ const MIDIHandler = () => {
         )}
       </div>
 
-      <div style={{ position: "fixed", bottom: "0" }}>
-        <Piano midiNumbers={pitchValues} noteOnColor={color} />
+      <div className="fixed bottom-0">
+        <Piano
+          midiNumbers={pitchValues}
+          noteOnColor={getItem("color-preference")}
+        />
       </div>
     </div>
   );

@@ -3,17 +3,16 @@ import { createContext, useEffect, useState } from "react";
 import { getItem, setItem } from "../utils/localStorage";
 import NonSSRComponent from "../components/NonSSRComponent";
 import Menu from "../components/Menu";
-import { Input, WebMidi } from "webmidi";
+import { Input, Output, WebMidi } from "webmidi";
 import {
   darkModeBackgroundColor,
   lightModeBackgroundColor,
 } from "../utils/styles";
 import SearchMode from "../components/SearchMode";
 import UpdateSoftwareNotification from "../components/UpdateSoftwareNotification";
-import ProfileIconComponent from "../components/ProfileIconComponent";
-import LiteVersionNotification from "../components/LiteVersionNotification";
-import LoginStreak from "../components/symbols/LoginStreak";
-import { resetSettings } from "../utils/resetSettings";
+import PracticeRoomInit from "../components/PracticeRoomInit";
+import MIDISetup from "../components/MIDISetup";
+import * as ColorUtils from "../utils/determineColors";
 
 interface ColorContextType {
   color: string;
@@ -53,16 +52,6 @@ interface AltChordsContextType {
 export const AltChordsContext = createContext<AltChordsContextType>({
   showAltChords: false,
   setShowAltChords: () => {},
-});
-
-interface MidiInputsContextType {
-  midiInputs: Input[];
-  setMidiInputs: React.Dispatch<React.SetStateAction<Input[]>>;
-}
-
-export const MidiInputsContext = createContext<MidiInputsContextType>({
-  midiInputs: [],
-  setMidiInputs: () => {},
 });
 
 interface ThemeContextType {
@@ -108,6 +97,48 @@ export const LiteVersionNotificationVisibilityContext =
     liteVersionNotificationIsVisible: false,
     setliteVersionNotificationVisibility: () => {},
   });
+
+interface ShowPracticeRoomContextType {
+  showPracticeRoom: boolean;
+  setShowPracticeRoom: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const ShowPracticeRoomContext =
+  createContext<ShowPracticeRoomContextType>({
+    showPracticeRoom: false,
+    setShowPracticeRoom: () => {},
+  });
+
+interface ShowPracticeRoomInitContextType {
+  showPracticeRoomInit: boolean;
+  setShowPracticeRoomInit: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const ShowPracticeRoomInitContext =
+  createContext<ShowPracticeRoomInitContextType>({
+    showPracticeRoomInit: true,
+    setShowPracticeRoomInit: () => {},
+  });
+
+interface MidiInputContextType {
+  midiInput: Input;
+  setMidiInput: React.Dispatch<React.SetStateAction<Input>>;
+}
+
+export const MidiInputContext = createContext<MidiInputContextType>({
+  midiInput: null,
+  setMidiInput: () => {},
+});
+
+interface MidiOutputContextType {
+  midiOutput: Output;
+  setMidiOutput: React.Dispatch<React.SetStateAction<Output>>;
+}
+
+export const MidiOutputContext = createContext<MidiOutputContextType>({
+  midiOutput: null,
+  setMidiOutput: () => {},
+});
 
 interface Props {
   setShowProfileIcon: () => {};
@@ -165,7 +196,8 @@ export default function Main() {
   const [key, setKey] = useState(keyPreference);
   const [mode, setMode] = useState(modePreference);
   const [showAltChords, setShowAltChords] = useState(showAltChordsPreference);
-  const [midiInputs, setMidiInputs] = useState<Input[]>([]);
+  const [midiInput, setMidiInput] = useState<Input>(null);
+  const [midiOutput, setMidiOutput] = useState<Output>(null);
   const [theme, setTheme] = useState(themePreference);
   const [showLiteVersionNotification, setShowLiteVersionNotification] =
     useState(false);
@@ -174,6 +206,11 @@ export default function Main() {
     liteVersionNotificationIsVisible,
     setliteVersionNotificationVisibility,
   ] = useState(false);
+
+  const [showPracticeRoomInit, setShowPracticeRoomInit] = useState(false);
+
+  const [showPracticeRoom, setShowPracticeRoom] = useState(false);
+  const [showPracticeRoomButton, setShowPracticeRoomButton] = useState(true);
 
   useEffect(() => {
     WebMidi.enable();
@@ -201,56 +238,6 @@ export default function Main() {
     };
   }, []);
 
-  // useEffect(() => {
-  //   if (!isSuiteUser) {
-  //     resetSettings();
-
-  //     if (getItem("color-preference") === null) {
-  //       colorPreference = "#ceb695";
-  //       setItem("color-preference", colorPreference);
-  //     } else {
-  //       colorPreference = getItem("color-preference") as string;
-  //     }
-
-  //     if (getItem("key-preference") === null) {
-  //       keyPreference = "C";
-  //       setItem("key-preference", keyPreference);
-  //     } else {
-  //       keyPreference = getItem("key-preference") as string;
-  //     }
-
-  //     if (getItem("mode-preference") === null) {
-  //       modePreference = "detect mode";
-  //       setItem("mode-preference", modePreference);
-  //     } else {
-  //       modePreference = getItem("mode-preference") as string;
-  //     }
-
-  //     if (getItem("show-alt-chords-preference") === null) {
-  //       showAltChordsPreference = false;
-  //       setItem("show-alt-chords-preference", showAltChordsPreference);
-  //     } else {
-  //       showAltChordsPreference = getItem(
-  //         "show-alt-chords-preference"
-  //       ) as boolean;
-  //     }
-
-  //     if (getItem("theme-preference") === null) {
-  //       themePreference = "light-mode";
-  //       setItem("theme-preference", themePreference);
-  //     } else {
-  //       themePreference = getItem("theme-preference") as string;
-  //     }
-
-  //     setColor(colorPreference);
-  //     setKey(keyPreference);
-  //     setMode(modePreference);
-  //     setShowAltChords(showAltChordsPreference);
-  //     setTheme(themePreference);
-  //     setShowProfileIcon(true);
-  //   }
-  // }, [isSuiteUser]);
-
   const triggerUpgradeNotificationFn = () => {
     if (!showLiteVersionNotification && !liteVersionNotificationIsVisible) {
       setShowLiteVersionNotification(true);
@@ -265,6 +252,10 @@ export default function Main() {
         : darkModeBackgroundColor;
   }, [theme]);
 
+  const handleSearch = (hideButton: boolean) => {
+    setShowPracticeRoomButton(!hideButton);
+  };
+
   return (
     <>
       <ColorContext.Provider value={{ color, setColor }}>
@@ -273,28 +264,76 @@ export default function Main() {
             <AltChordsContext.Provider
               value={{ showAltChords, setShowAltChords }}
             >
-              <MidiInputsContext.Provider value={{ midiInputs, setMidiInputs }}>
-                <ThemeContext.Provider value={{ theme, setTheme }}>
-                  <SuiteUserContext.Provider value={{ isSuiteUser: true }}>
-                    <LiteVersionNotificationContext.Provider
+              <ThemeContext.Provider value={{ theme, setTheme }}>
+                <SuiteUserContext.Provider value={{ isSuiteUser: true }}>
+                  <LiteVersionNotificationContext.Provider
+                    value={{
+                      showLiteVersionNotification,
+                      setShowLiteVersionNotification,
+                      triggerUpgradeNotification: triggerUpgradeNotificationFn,
+                    }}
+                  >
+                    <LiteVersionNotificationVisibilityContext.Provider
                       value={{
-                        showLiteVersionNotification,
-                        setShowLiteVersionNotification,
-                        triggerUpgradeNotification:
-                          triggerUpgradeNotificationFn,
+                        liteVersionNotificationIsVisible,
+                        setliteVersionNotificationVisibility,
                       }}
                     >
-                      <LiteVersionNotificationVisibilityContext.Provider
-                        value={{
-                          liteVersionNotificationIsVisible,
-                          setliteVersionNotificationVisibility,
-                        }}
+                      <ShowPracticeRoomContext.Provider
+                        value={{ showPracticeRoom, setShowPracticeRoom }}
                       >
-                        <div>
-                          <NonSSRComponent>
-                            <UpdateSoftwareNotification />
-                            <Menu />
-                            {/* {showProfileIcon && (
+                        <MidiInputContext.Provider
+                          value={{ midiInput, setMidiInput }}
+                        >
+                          <MidiOutputContext.Provider
+                            value={{ midiOutput, setMidiOutput }}
+                          >
+                            <ShowPracticeRoomInitContext.Provider
+                              value={{
+                                showPracticeRoomInit,
+                                setShowPracticeRoomInit,
+                              }}
+                            >
+                              <div>
+                                <NonSSRComponent>
+                                  <UpdateSoftwareNotification />
+                                  {/* {!showPracticeRoomInit &&
+                                    !showPracticeRoom &&
+                                    showPracticeRoomButton && (
+                                      <div
+                                        style={{
+                                          position: "absolute",
+                                          right: "3%",
+                                        }}
+                                      >
+                                        <button
+                                          className="rounded-4xl py-2 px-4"
+                                          onClick={() => {
+                                            setShowPracticeRoomInit(
+                                              !showPracticeRoomInit
+                                            );
+                                          }}
+                                          style={{
+                                            color:
+                                              ColorUtils.determineFontColorReverse(),
+                                            backgroundColor:
+                                              ColorUtils.determineBackgroundColorReverse(),
+                                          }}
+                                        >
+                                          enter the shed.
+                                        </button>
+                                      </div>
+                                    )} */}
+                                  <Menu />
+                                  <div className="absolute top-[3%] left-[3%] flex gap-[10px]">
+                                    <div>
+                                      <MIDISetup label={"Midi Input"} />
+                                    </div>
+                                    <div>
+                                      <MIDISetup label={"Midi Output"} />
+                                    </div>
+                                  </div>
+                                  {/* {showProfileIcon && (
                               <div
                                 style={{
                                   position: "absolute",
@@ -323,28 +362,39 @@ export default function Main() {
                                 </div>
                               </div>
                             )} */}
-                            {/* <MIDIHandler /> */}
-                            {mode === "detect mode" ? (
-                              <MIDIHandler />
-                            ) : (
-                              <SearchMode
-                                noteOnColor={color}
-                                // setShowProfileIcon={setShowProfileIcon}
-                              />
-                            )}
-                            {/* {showLiteVersionNotification == true &&
+                                  {/* <MIDIHandler /> */}
+
+                                  {showPracticeRoomInit ? (
+                                    <PracticeRoomInit />
+                                  ) : mode === "detect mode" ? (
+                                    <MIDIHandler
+                                      socket={null}
+                                      roomName={null}
+                                      playAccess={null}
+                                    />
+                                  ) : (
+                                    <SearchMode
+                                      noteOnColor={color}
+                                      onSearch={handleSearch}
+                                      // setShowProfileIcon={setShowProfileIcon}
+                                    />
+                                  )}
+                                  {/* {showLiteVersionNotification == true &&
                           liteVersionNotificationIsVisible == true ? (
                             <LiteVersionNotification />
                           ) : (
                             <></>
                           )} */}
-                          </NonSSRComponent>
-                        </div>
-                      </LiteVersionNotificationVisibilityContext.Provider>
-                    </LiteVersionNotificationContext.Provider>
-                  </SuiteUserContext.Provider>
-                </ThemeContext.Provider>
-              </MidiInputsContext.Provider>
+                                </NonSSRComponent>
+                              </div>
+                            </ShowPracticeRoomInitContext.Provider>
+                          </MidiOutputContext.Provider>
+                        </MidiInputContext.Provider>
+                      </ShowPracticeRoomContext.Provider>
+                    </LiteVersionNotificationVisibilityContext.Provider>
+                  </LiteVersionNotificationContext.Provider>
+                </SuiteUserContext.Provider>
+              </ThemeContext.Provider>
             </AltChordsContext.Provider>
           </ModeContext.Provider>
         </KeyContext.Provider>

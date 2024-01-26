@@ -1,5 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 html,
 body {
+  margin: 0;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
   margin: 0;
 }
 
@@ -9,8 +19,7 @@ html * {
   -webkit-user-select: none;
 }
 
-body,
-.theme-transition * {
+:not(.no-transition *) {
   transition: background-color 0.5s, color 0.5s, border-color 0.5s, stroke 0.5s,
     fill 0.5s;
 }
@@ -21,4 +30,12 @@ body,
 
 input::placeholder {
   opacity: 0.3;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+button {
+  outline: 2px solid transparent;
 }

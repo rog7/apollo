@@ -248,7 +248,7 @@ const SignUp = ({
       ) : (
         <AccessCodeComponent
           errorPlaceholder={errorPlaceholder}
-          displayMessage={`enter the 6-digit verfication code sent to ${email}`}
+          displayMessage={`enter the 6-digit verification code sent to ${email}`}
           setShowSignUp={setShowSignUp}
           onSetCode={setSignUpCode}
           onCodeCheck={onSignUpCodeCheck}

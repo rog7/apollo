@@ -8,7 +8,13 @@ import {
   fontFamily,
   lightModeFontColor,
 } from "../utils/styles";
-import { AltChordsContext, KeyContext, ThemeContext } from "../pages/main";
+import {
+  AltChordsContext,
+  KeyContext,
+  MidiInputContext,
+  ShowPracticeRoomContext,
+  ThemeContext,
+} from "../pages/main";
 import CancelSymbol from "./symbols/CancelSymbol";
 import { detect } from "@tonaljs/chord-detect";
 import { Note } from "tonal";
@@ -19,9 +25,10 @@ import { getItem } from "../utils/localStorage";
 
 interface Props {
   noteOnColor: string;
+  onSearch: (hideButton: boolean) => void;
 }
 
-const SearchMode = ({ noteOnColor }: Props) => {
+const SearchMode = ({ noteOnColor, onSearch }: Props) => {
   const [selectedNotes, setSelectedNotes] = useState<number[]>([]);
   const [searchResults, setSearchResults] = useState<number[][]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -43,14 +50,13 @@ const SearchMode = ({ noteOnColor }: Props) => {
   const { showAltChords } = useContext(AltChordsContext);
   const { key } = useContext(KeyContext);
   const { theme } = useContext(ThemeContext);
+  const { midiInput } = useContext(MidiInputContext);
+  const { setShowPracticeRoom } = useContext(ShowPracticeRoomContext);
 
   useEffect(() => {
     if (WebMidi !== undefined) {
-      WebMidi.addListener("connected", handleMidiInputs);
-      WebMidi.addListener("disconnected", handleMidiInputs);
-
       for (const input of WebMidi.inputs) {
-        if (input.id !== "") {
+        if (input === midiInput) {
           input.addListener("noteon", handleMIDIMessage);
           input.addListener("noteoff", handleMIDIMessage);
         }
@@ -148,17 +154,6 @@ const SearchMode = ({ noteOnColor }: Props) => {
   window.addEventListener("keydown", handleKeyDown);
   window.addEventListener("keyup", handleKeyUp);
 
-  const handleMidiInputs = () => {
-    if (WebMidi.inputs.length !== 0) {
-      for (const input of WebMidi.inputs) {
-        if (input.id !== null) {
-          input.addListener("noteon", handleMIDIMessage);
-          input.addListener("noteoff", handleMIDIMessage);
-        }
-      }
-    }
-  };
-
   // Function to handle incoming MIDI data
   function handleMIDIMessage(event: any) {
     if (event.data.length === 3) {
@@ -248,6 +243,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
       setSearchResult(values[index.current]);
       setSearchResults(values);
       setIsSearching(true);
+      onSearch(true);
     }
   };
 
@@ -263,6 +259,8 @@ const SearchMode = ({ noteOnColor }: Props) => {
     midiNumbers.current = [];
     setCurrentChord("");
     setIsSearching(false);
+    setShowPracticeRoom(false);
+    onSearch(false);
   };
 
   const handleGoingBackInSearchResults = () => {
@@ -347,7 +345,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
   };
 
   const blackKeyStyleOn = {
-    height: "63.8%",
+    height: "57.2%",
     width: "1.1%",
     backgroundColor: noteOnColor,
     border: "1px solid black",
@@ -356,17 +354,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
   return (
     <div>
       {!isSearching ? (
-        <div
-          className="theme-transition"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            position: "absolute",
-            width: "100vw",
-            top: "43%",
-          }}
-        >
+        <div className="no-transition flex justify-center items-center absolute w-screen top-[43%]">
           {selectedNotes.length === 0 ? (
             <></>
           ) : (
@@ -385,56 +373,17 @@ const SearchMode = ({ noteOnColor }: Props) => {
           {searchResults.length > 0 ? (
             <div>
               <div
-                className="theme-transition"
-                style={{
-                  position: "absolute",
-                  left: "5%",
-                  top: "5%",
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: fontFamily,
-                    fontWeight: "400",
-                    color:
-                      theme === "light-mode"
-                        ? lightModeFontColor
-                        : darkModeFontColor,
-                    fontSize: "24px",
-                  }}
-                >
-                  Key: {getItem("key-preference")}
-                </div>
-              </div>
-              <div
-                className="theme-transition"
-                style={{
-                  position: "absolute",
-                  right: "5%",
-                  top: "5%",
-                  cursor: "pointer",
-                }}
+                className=" absolute right-[5%] top-[5%] cursor-pointer"
                 onClick={cancelSearch}
               >
                 <CancelSymbol />
               </div>
-              <div
-                className="theme-transition"
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  position: "absolute",
-                  width: "100vw",
-                  height: "70%",
-                }}
-              >
+              <div className="flex justify-center items-center absolute w-screen h-[70%]">
                 <div
+                  className="absolute left-[5%]"
                   style={{
                     cursor: index.current === 0 ? "arrow" : "pointer",
                     opacity: index.current === 0 ? 0 : 1,
-                    position: "absolute",
-                    left: "5%",
                   }}
                   onClick={
                     index.current !== 0
@@ -444,61 +393,50 @@ const SearchMode = ({ noteOnColor }: Props) => {
                 >
                   <ArrowBackSymbol />
                 </div>
-                <div>
-                  {" "}
+                <div
+                  className="flex flex-col justify-center items-center"
+                  style={{
+                    color:
+                      theme === "light-mode"
+                        ? lightModeFontColor
+                        : darkModeFontColor,
+                  }}
+                >
                   <div
+                    className="text-5xl text-center"
                     style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
                       color:
                         theme === "light-mode"
                           ? lightModeFontColor
                           : darkModeFontColor,
                     }}
                   >
-                    <div
-                      style={{
-                        fontFamily: fontFamily,
-                        fontWeight: "400",
-                        color:
-                          theme === "light-mode"
-                            ? lightModeFontColor
-                            : darkModeFontColor,
-                        fontSize: "48px",
-                      }}
-                    >
-                      {currentChord}
-                    </div>
-                    {showAltChords &&
-                      altChords.map((value, index) => (
-                        <div
-                          style={{
-                            fontFamily: fontFamily,
-                            fontWeight: "200",
-                            color:
-                              theme === "light-mode"
-                                ? lightModeFontColor
-                                : darkModeFontColor,
-                            fontSize: "24px",
-                          }}
-                          key={index}
-                        >
-                          {value}
-                        </div>
-                      ))}
+                    {currentChord}
                   </div>
+                  {showAltChords &&
+                    altChords.map((value, index) => (
+                      <div
+                        className="text-2xl font-extralight"
+                        style={{
+                          color:
+                            theme === "light-mode"
+                              ? lightModeFontColor
+                              : darkModeFontColor,
+                        }}
+                        key={index}
+                      >
+                        {value}
+                      </div>
+                    ))}
                 </div>
                 <div
+                  className="absolute right-[5%]"
                   style={{
                     cursor:
                       index.current === searchResults.length - 1
                         ? "arrow"
                         : "pointer",
                     opacity: index.current === searchResults.length - 1 ? 0 : 1,
-                    position: "absolute",
-                    right: "5%",
                   }}
                   onClick={
                     index.current !== searchResults.length - 1
@@ -510,25 +448,15 @@ const SearchMode = ({ noteOnColor }: Props) => {
                 </div>
               </div>
               {searchResults.length !== 1 && (
-                <div
-                  className="theme-transition"
-                  style={{
-                    position: "absolute",
-                    bottom: "150px",
-                    textAlign: "center",
-                    width: "100%",
-                  }}
-                >
+                <div className="absolute bottom-[150px] text-center w-full">
                   <div
+                    className="text-lg"
                     style={{
-                      fontFamily: fontFamily,
-                      fontWeight: "400",
                       color:
                         theme === "light-mode"
                           ? lightModeFontColor
                           : darkModeFontColor,
                       opacity: 0.5,
-                      fontSize: "18px",
                     }}
                   >
                     {index.current + 1} / {searchResults.length}
@@ -537,30 +465,17 @@ const SearchMode = ({ noteOnColor }: Props) => {
               )}
             </div>
           ) : (
-            <div
-              className="theme-transition"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                flexDirection: "column",
-                position: "absolute",
-                top: "40%",
-                width: "100%",
-                gap: "20px",
-              }}
-            >
+            <div className="flex flex-col items-center absolute top-[40%] w-full gap-[20px]">
               <div style={{ cursor: "pointer" }} onClick={cancelSearch}>
                 <CancelSymbol />
               </div>
               <div
+                className="text-2xl"
                 style={{
-                  fontFamily: fontFamily,
-                  fontWeight: "400",
                   color:
                     theme === "light-mode"
                       ? lightModeFontColor
                       : darkModeFontColor,
-                  fontSize: "24px",
                 }}
               >
                 no chords were found
@@ -569,17 +484,9 @@ const SearchMode = ({ noteOnColor }: Props) => {
           )}
         </>
       )}
-      <div style={{ position: "fixed", bottom: "0px" }}>
+      <div className="fixed bottom-0">
         {!isSearching ? (
-          <div
-            style={{
-              height: "18vh",
-              width: "100vw",
-              display: "flex",
-              cursor: "pointer",
-              position: "relative",
-            }}
-          >
+          <div className="no-transition h-[18vh] w-screen flex relative cursor-pointer">
             <div
               style={
                 selectedNotes.includes(21) ? whiteKeyStyleOn : whiteKeyStyleOff
@@ -592,7 +499,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "1.22%",
+                left: "1.36%",
               }}
               onClick={() => handleClick(22)}
             ></div>
@@ -614,7 +521,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "5.06%",
+                left: "5.20%",
               }}
               onClick={() => handleClick(25)}
             ></div>
@@ -630,7 +537,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "6.98%",
+                left: "7.12%",
               }}
               onClick={() => handleClick(27)}
             ></div>
@@ -652,7 +559,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "10.82%",
+                left: "10.96%",
               }}
               onClick={() => handleClick(30)}
             ></div>
@@ -668,7 +575,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "12.74%",
+                left: "12.88%",
               }}
               onClick={() => handleClick(32)}
             ></div>
@@ -684,7 +591,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "14.66%",
+                left: "14.8%",
               }}
               onClick={() => handleClick(34)}
             ></div>
@@ -706,7 +613,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "18.5%",
+                left: "18.64%",
               }}
               onClick={() => handleClick(37)}
             ></div>
@@ -722,7 +629,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "20.42%",
+                left: "20.56%",
               }}
               onClick={() => handleClick(39)}
             ></div>
@@ -744,7 +651,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "24.26%",
+                left: "24.4%",
               }}
               onClick={() => handleClick(42)}
             ></div>
@@ -760,7 +667,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "26.18%",
+                left: "26.32%",
               }}
               onClick={() => handleClick(44)}
             ></div>
@@ -776,7 +683,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "28.1%",
+                left: "28.24%",
               }}
               onClick={() => handleClick(46)}
             ></div>
@@ -798,7 +705,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "31.94%",
+                left: "32.08%",
               }}
               onClick={() => handleClick(49)}
             ></div>
@@ -814,7 +721,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "33.86%",
+                left: "34%",
               }}
               onClick={() => handleClick(51)}
             ></div>
@@ -836,7 +743,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "37.7%",
+                left: "37.84%",
               }}
               onClick={() => handleClick(54)}
             ></div>
@@ -852,7 +759,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "39.62%",
+                left: "39.76%",
               }}
               onClick={() => handleClick(56)}
             ></div>
@@ -868,7 +775,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "41.54%",
+                left: "41.68%",
               }}
               onClick={() => handleClick(58)}
             ></div>
@@ -890,7 +797,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "45.38%",
+                left: "45.52%",
               }}
               onClick={() => handleClick(61)}
             ></div>
@@ -906,7 +813,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "47.3%",
+                left: "47.44%",
               }}
               onClick={() => handleClick(63)}
             ></div>
@@ -928,7 +835,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "51.14%",
+                left: "51.28%",
               }}
               onClick={() => handleClick(66)}
             ></div>
@@ -944,7 +851,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "53.06%",
+                left: "53.3%",
               }}
               onClick={() => handleClick(68)}
             ></div>
@@ -960,7 +867,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "54.98%",
+                left: "55.17%",
               }}
               onClick={() => handleClick(70)}
             ></div>
@@ -982,7 +889,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "58.82%",
+                left: "59.07%",
               }}
               onClick={() => handleClick(73)}
             ></div>
@@ -998,7 +905,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "60.74%",
+                left: "60.95%",
               }}
               onClick={() => handleClick(75)}
             ></div>
@@ -1020,7 +927,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "64.58%",
+                left: "64.84%",
               }}
               onClick={() => handleClick(78)}
             ></div>
@@ -1036,7 +943,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "66.5%",
+                left: "66.72%",
               }}
               onClick={() => handleClick(80)}
             ></div>
@@ -1052,7 +959,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "68.42%",
+                left: "68.62%",
               }}
               onClick={() => handleClick(82)}
             ></div>
@@ -1074,7 +981,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "72.26%",
+                left: "72.5%",
               }}
               onClick={() => handleClick(85)}
             ></div>
@@ -1090,7 +997,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "74.18%",
+                left: "74.44%",
               }}
               onClick={() => handleClick(87)}
             ></div>
@@ -1112,7 +1019,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "78.02%",
+                left: "78.25%",
               }}
               onClick={() => handleClick(90)}
             ></div>
@@ -1128,7 +1035,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "79.94%",
+                left: "80.2%",
               }}
               onClick={() => handleClick(92)}
             ></div>
@@ -1144,7 +1051,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "81.86%",
+                left: "82.12%",
               }}
               onClick={() => handleClick(94)}
             ></div>
@@ -1166,7 +1073,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "85.7%",
+                left: "85.96%",
               }}
               onClick={() => handleClick(97)}
             ></div>
@@ -1182,7 +1089,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "87.62%",
+                left: "87.88%",
               }}
               onClick={() => handleClick(99)}
             ></div>
@@ -1204,7 +1111,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "91.46%",
+                left: "91.72%",
               }}
               onClick={() => handleClick(102)}
             ></div>
@@ -1220,7 +1127,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "93.38%",
+                left: "93.64%",
               }}
               onClick={() => handleClick(104)}
             ></div>
@@ -1236,7 +1143,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "95.3%",
+                left: "95.55%",
               }}
               onClick={() => handleClick(106)}
             ></div>
@@ -1255,6 +1162,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
           </div>
         ) : (
           <div
+            className="no-transition"
             style={{
               height: "18vh",
               width: "100vw",
@@ -1274,7 +1182,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "1.22%",
+                left: "1.36%",
               }}
             ></div>
             <div
@@ -1293,7 +1201,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "5.06%",
+                left: "5.20%",
               }}
             ></div>
             <div
@@ -1307,7 +1215,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "6.98%",
+                left: "7.12%",
               }}
             ></div>
             <div
@@ -1326,7 +1234,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "10.82%",
+                left: "10.96%",
               }}
             ></div>
             <div
@@ -1340,7 +1248,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "12.74%",
+                left: "12.88%",
               }}
             ></div>
             <div
@@ -1354,7 +1262,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "14.66%",
+                left: "14.8%",
               }}
             ></div>
             <div
@@ -1373,7 +1281,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "18.5%",
+                left: "18.64%",
               }}
             ></div>
             <div
@@ -1387,7 +1295,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "20.42%",
+                left: "20.56%",
               }}
             ></div>
             <div
@@ -1406,7 +1314,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "24.26%",
+                left: "24.4%",
               }}
             ></div>
             <div
@@ -1420,7 +1328,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "26.18%",
+                left: "26.32%",
               }}
             ></div>
             <div
@@ -1434,7 +1342,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "28.1%",
+                left: "28.24%",
               }}
             ></div>
             <div
@@ -1453,7 +1361,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "31.94%",
+                left: "32.08%",
               }}
             ></div>
             <div
@@ -1467,7 +1375,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "33.86%",
+                left: "34%",
               }}
             ></div>
             <div
@@ -1486,7 +1394,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "37.7%",
+                left: "37.84%",
               }}
             ></div>
             <div
@@ -1500,7 +1408,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "39.62%",
+                left: "39.76%",
               }}
             ></div>
             <div
@@ -1514,7 +1422,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "41.54%",
+                left: "41.68%",
               }}
             ></div>
             <div
@@ -1533,7 +1441,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "45.38%",
+                left: "45.52%",
               }}
             ></div>
             <div
@@ -1547,7 +1455,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "47.3%",
+                left: "47.44%",
               }}
             ></div>
             <div
@@ -1566,7 +1474,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "51.14%",
+                left: "51.28%",
               }}
             ></div>
             <div
@@ -1580,7 +1488,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "53.06%",
+                left: "53.3%",
               }}
             ></div>
             <div
@@ -1594,7 +1502,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "54.98%",
+                left: "55.17%",
               }}
             ></div>
             <div
@@ -1613,7 +1521,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "58.82%",
+                left: "59.07%",
               }}
             ></div>
             <div
@@ -1627,7 +1535,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "60.74%",
+                left: "60.95%",
               }}
             ></div>
             <div
@@ -1646,7 +1554,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "64.58%",
+                left: "64.84%",
               }}
             ></div>
             <div
@@ -1660,7 +1568,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "66.5%",
+                left: "66.72%",
               }}
             ></div>
             <div
@@ -1674,7 +1582,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "68.42%",
+                left: "68.62%",
               }}
             ></div>
             <div
@@ -1693,7 +1601,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "72.26%",
+                left: "72.5%",
               }}
             ></div>
             <div
@@ -1707,7 +1615,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "74.18%",
+                left: "74.44%",
               }}
             ></div>
             <div
@@ -1726,7 +1634,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "78.02%",
+                left: "78.25%",
               }}
             ></div>
             <div
@@ -1740,7 +1648,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "79.94%",
+                left: "80.2%",
               }}
             ></div>
             <div
@@ -1754,7 +1662,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "81.86%",
+                left: "82.12%",
               }}
             ></div>
             <div
@@ -1773,7 +1681,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "85.7%",
+                left: "85.96%",
               }}
             ></div>
             <div
@@ -1787,7 +1695,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "87.62%",
+                left: "87.88%",
               }}
             ></div>
             <div
@@ -1806,7 +1714,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "91.46%",
+                left: "91.72%",
               }}
             ></div>
             <div
@@ -1820,7 +1728,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "93.38%",
+                left: "93.64%",
               }}
             ></div>
             <div
@@ -1834,7 +1742,7 @@ const SearchMode = ({ noteOnColor }: Props) => {
                   ? blackKeyStyleOn
                   : blackKeyStyleOff),
                 position: "absolute",
-                left: "95.3%",
+                left: "95.55%",
               }}
             ></div>
             <div
