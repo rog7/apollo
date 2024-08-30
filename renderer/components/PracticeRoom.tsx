@@ -1,31 +1,31 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import MIDIHandler from "./MIDIHandler";
-import * as ColorUtils from "../utils/determineColors";
-import {
-  darkModeFontColor,
-  fontFamily,
-  lightModeFontColor,
-} from "../utils/styles";
-import Piano from "./Piano";
-import {
-  ColorContext,
-  KeyContext,
-  MidiInputContext,
-  MidiOutputContext,
-  ThemeContext,
-} from "../pages/main";
-import { getItem } from "../utils/localStorage";
-import { detect } from "@tonaljs/chord-detect";
-import { Note } from "tonal";
-import convertChordToCorrectKey from "../utils/chordConversion";
 import {
   ChatBubbleOvalLeftIcon,
   SpeakerWaveIcon,
   SpeakerXMarkIcon,
 } from "@heroicons/react/24/outline";
-import DefaultProfilePic from "./symbols/DefaultProfilePic";
-import PlayAccessNotification from "./PlayAccessNotification";
+import { detect } from "@tonaljs/chord-detect";
+import { useContext, useEffect, useRef, useState } from "react";
+import { Note, Progression } from "tonal";
 import { UsernameContext } from "../pages/home";
+import {
+  KeyContext,
+  MidiInputContext,
+  MidiOutputContext,
+  ThemeContext,
+} from "../pages/main";
+import convertChordToCorrectKey from "../utils/chordConversion";
+import * as ColorUtils from "../utils/determineColors";
+import { getItem } from "../utils/localStorage";
+import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
+import MIDIHandler from "./MIDIHandler";
+
+import Piano from "./Piano";
+import PlayAccessNotification from "./PlayAccessNotification";
+import DefaultProfilePic from "./symbols/DefaultProfilePic";
+import path from "path";
+import fs from "fs";
+import { Output, WebMidi } from "webmidi";
+import { TIME_ALLOWED_TO_SEND_MIDI_MESSAGE } from "../utils/globalVars";
 
 interface GuestInfo {
   username: string;
@@ -38,14 +38,17 @@ interface MessageInfo {
   profileImageUrl: string | null;
   message: string;
 }
+
 interface Props {
   closePracticeRoom: () => void;
   isHost: boolean;
   socket: WebSocket;
 }
+
 const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
   const [color, setColor] = useState(getItem("color-preference"));
   const [pitchValues, setPitchValues] = useState([]);
+  const pitchesRef = useRef<Set<number>>(new Set());
   const { midiOutput } = useContext(MidiOutputContext);
   const [numOfViewers, setNumOfViewers] = useState(0);
   const [modalSetting, setModalSetting] = useState("Permissions");
@@ -61,9 +64,16 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
   const [message, setMessage] = useState("");
   const [receivedMessages, setReceivedMessages] = useState<MessageInfo[]>([]);
   const [showRedDot, setShowRedDot] = useState(false);
+  // const audioContext = new AudioContext();
+  const sustainedAudioDataRef = useRef([]);
+  const sustainPedalPressedRef = useRef(false);
+  const [isFootPedalPressed, setIsFootPedalPressed] = useState(false);
 
   const chord = useRef("");
   const altChords = useRef([""]);
+  const isFirstMidiMessageRef = useRef(true);
+  const offsetRef = useRef(0);
+  const midiBuffer = useRef<number[][]>([]);
 
   const chords = detect(
     pitchValues.map((value) => Note.fromMidi(value)),
@@ -80,6 +90,22 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
     .map((chord) =>
       convertChordToCorrectKey(chord, getItem("key-preference") as string)
     );
+
+  if (getItem("show-chord-numbers-preference") === "true" && !isHost) {
+    const romanNumeralChord = Progression.toRomanNumerals(
+      getItem("key-preference") as string,
+      [chord.current]
+    )[0];
+
+    chord.current = romanNumeralChord;
+
+    altChords.current = altChords.current.map(
+      (chord) =>
+        Progression.toRomanNumerals(getItem("key-preference") as string, [
+          chord,
+        ])[0]
+    );
+  }
 
   const sendMessage = () => {
     if (message.trim().length === 0) return;
@@ -108,29 +134,113 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
     socket.send(JSON.stringify(obj));
   };
 
-  const handleMidi = (data: any) => {
+  const handleMidi = (midiOutput: Output, data: any) => {
     setColor(data.note_on_color);
     if (data.midi_message[0] === 144) {
-      setPitchValues(pitchValues.concat(data.midi_message[1]));
-    } else if (data.midi_message[0] === 128) {
+      pitchesRef.current.add(data.midi_message[1]);
+
       setPitchValues(
-        pitchValues.filter((value) => value != data.midi_message[1])
+        Array.from(pitchesRef.current).sort((a, b) => {
+          return a - b;
+        })
+      );
+    } else if (data.midi_message[0] === 128) {
+      pitchesRef.current.delete(data.midi_message[1]);
+      setPitchValues(
+        Array.from(pitchesRef.current).sort((a, b) => {
+          return a - b;
+        })
       );
     }
 
-    if (midiOutput !== null && data.username !== selfUsername) {
+    if (midiOutput !== null) {
       midiOutput.send([
         data.midi_message[0],
         data.midi_message[1],
         data.midi_message[2],
       ]);
+
+      if (data.midi_message[0] === 0xb0 && data.midi_message[1] === 64) {
+        const pedalValue = data.midi_message[2]; // Pedal value ranging from 0 to 127
+
+        if (pedalValue === 127) {
+          setIsFootPedalPressed(true);
+        } else {
+          setIsFootPedalPressed(false);
+        }
+      }
     }
+
+    midiBuffer.current.shift();
   };
 
-  socket.onmessage = (event) => {
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  socket.onmessage = async (event) => {
     const obj = JSON.parse(event.data);
+
+    // if (obj.type === "audio") {
+    //   const audioData = Object.values(obj.audio_data);
+
+    //   // Create an AudioBuffer
+    //   const audioBuffer = audioContext.createBuffer(
+    //     1,
+    //     audioData.length,
+    //     audioContext.sampleRate
+    //   );
+
+    //   // Fill the AudioBuffer with the audio data
+    //   audioBuffer.getChannelData(0).set(obj.audio_data);
+
+    //   // Create an AudioBufferSourceNode
+    //   const source = audioContext.createBufferSource();
+    //   source.buffer = audioBuffer;
+
+    //   // Connect the AudioBufferSourceNode to the destination
+    //   source.connect(audioContext.destination);
+
+    //   // Start the AudioBufferSourceNode
+    //   source.start();
+    // }
     if (obj.type === "midi") {
-      handleMidi(obj);
+      const midiMessageString = obj.midi_message as string;
+
+      const data = midiMessageString.split(";").map((message, index) => {
+        const result = message.split(",").map((val) => Number(val));
+
+        let data: number[];
+        if (index === 0 && isFirstMidiMessageRef.current) {
+          data = [result[0], result[1], result[2], 0];
+          offsetRef.current = result[3];
+        } else {
+          data = [
+            result[0],
+            result[1],
+            result[2],
+            result[3] - offsetRef.current,
+          ];
+        }
+
+        return data;
+      });
+
+      offsetRef.current = data[data.length - 1][3];
+
+      if (midiBuffer.current.length === 0) {
+        midiBuffer.current = data;
+
+        midiBuffer.current.forEach(async (message) => {
+          const res = {
+            note_on_color: obj.note_on_color,
+            midi_message: message,
+          };
+
+          await delay(message[3]);
+          handleMidi(midiOutput, res);
+        });
+      } else {
+        midiBuffer.current.concat(data);
+      }
     } else if (obj.type === "numOfViewers" && isHost) {
       setNumOfViewers(obj.num_of_viewers);
     } else if (obj.type === "guestInfo") {
@@ -145,8 +255,6 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
           setPlayAccess(access);
           setShowPlayAccessNotification(true);
           if (!access && midiInput !== null) {
-            midiInput.removeListener("noteon");
-            midiInput.removeListener("noteoff");
             midiInput.removeListener("midimessage");
           }
         }
@@ -266,7 +374,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
                         {guest.username}
                       </div>
                     </div>
-                    <div>
+                    {/* <div>
                       {guest.playAccess ? (
                         isHost ? (
                           <SpeakerWaveIcon
@@ -304,7 +412,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
                           stroke={ColorUtils.determineBorderColor()}
                         />
                       )}
-                    </div>
+                    </div> */}
                   </div>
                 ))}
                 {guestList.length === 0 && (
@@ -320,7 +428,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
               </>
             ) : (
               <>
-                <div className="flex flex-col-reverse gap-y-3 grow px-2 overflow-y-scroll no-scrollbar">
+                <div className="no-transition flex flex-col-reverse gap-y-3 grow px-2 overflow-y-scroll no-scrollbar">
                   {receivedMessages.map((message, index) =>
                     message.username !== selfUsername ? (
                       <div key={index} className="flex justify-start gap-x-2">
@@ -350,7 +458,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex justify-end">
+                      <div key={index} className="flex justify-end">
                         <div className="flex flex-row-reverse bg-[#1F8AFF] rounded-2xl px-4 py-2 w-fit max-w-[200px] break-all text-white text-md">
                           {message.message}
                         </div>
@@ -359,7 +467,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
                   )}
                 </div>
                 <div
-                  className="flex-none h-[40px] rounded-4xl border-2 flex justify-center items-center justify-between pr-[10px]"
+                  className="flex-none h-[40px] rounded-4xl border-2 flex items-center justify-between pr-[10px]"
                   style={{
                     borderColor: ColorUtils.determineBorderColor(),
                   }}
@@ -413,7 +521,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
         </div>
       )}
       <>
-        {midiOutput === null && (
+        {midiOutput === null && !isHost && (
           <div
             className="text-center mt-2"
             style={{
@@ -424,14 +532,40 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
             Note: select a midi output channel to enable audio playback
           </div>
         )}
-        <div className="hidden">
+        <div className={!isHost ? "hidden" : ""}>
           <MIDIHandler
             socket={socket}
             roomName={getItem("room-name")}
             playAccess={playAccess}
           />
         </div>
-        <div className="fixed bottom-0">
+        <div
+          className={
+            !isHost
+              ? "absolute top-[77%] left-[2%] flex gap-[5px] items-center"
+              : "hidden"
+          }
+        >
+          <div
+            className={`w-3 h-3 rounded-full no-transition border-2 ${
+              isFootPedalPressed ? "bg-teal-600" : "white"
+            }`}
+            style={{
+              borderColor:
+                theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
+            }}
+          />
+          <div
+            className="text-sm"
+            style={{
+              color:
+                theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
+            }}
+          >
+            Sustain
+          </div>
+        </div>
+        <div className={!isHost ? "fixed bottom-0" : "hidden"}>
           <Piano midiNumbers={pitchValues} noteOnColor={color} />
         </div>
         <div

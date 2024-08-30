@@ -225,7 +225,7 @@ const SignUp = ({
                         color: determineFontColorReverse(),
                       }}
                     >
-                      sign up
+                      Sign up
                     </div>
                   </div>
                 </div>
@@ -239,7 +239,7 @@ const SignUp = ({
                   }}
                   onClick={handleReturnToLogin}
                 >
-                  return to login
+                  Return to login
                 </div>
               </div>
             </div>
@@ -248,7 +248,7 @@ const SignUp = ({
       ) : (
         <AccessCodeComponent
           errorPlaceholder={errorPlaceholder}
-          displayMessage={`enter the 6-digit verification code sent to ${email}`}
+          displayMessage={`Enter the 6-digit verification code sent to ${email}`}
           setShowSignUp={setShowSignUp}
           onSetCode={setSignUpCode}
           onCodeCheck={onSignUpCodeCheck}

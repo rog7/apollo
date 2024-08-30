@@ -1,7 +1,5 @@
 import ApolloSymbol from "./symbols/ApolloSymbol";
-import {
-  fontFamily,
-} from "../utils/styles";
+import { fontFamily } from "../utils/styles";
 import { useState } from "react";
 import {
   determineBackgroundColorForSetNewPassword,
@@ -33,12 +31,12 @@ const SetNewPasswordComponent = ({
   const checkIfPasswordMaches = () => {
     if (passwordValue1 === passwordValue2) {
       if (passwordValue1.length === 0) {
-        setErrorPlaceholder("password fields cannot be empty");
+        setErrorPlaceholder("Password fields cannot be empty.");
       } else {
         onSetNewPassword(passwordValue1);
       }
     } else {
-      setErrorPlaceholder("passwords do not match");
+      setErrorPlaceholder("Passwords do not match.");
     }
   };
 

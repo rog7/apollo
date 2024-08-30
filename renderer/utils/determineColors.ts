@@ -22,6 +22,61 @@ export const determineBackgroundColor = () => {
     : darkModeBackgroundColor;
 };
 
+export const determineBackgroundColorForCard = () => {
+  return getItem("theme-preference") === null
+    ? "#E5E4DB"
+    : getItem("theme-preference") === "light-mode"
+    ? "#E5E4DB"
+    : darkModeBackgroundColor;
+};
+
+export const determineBackgroundColorForFreeCard = () => {
+  return getItem("theme-preference") === null
+    ? "#FFFFFF"
+    : getItem("theme-preference") === "light-mode"
+    ? "#FFFFFF"
+    : darkModeBackgroundColor;
+};
+
+export const determineBackgroundColorForPremiumCard = () => {
+  return getItem("theme-preference") === null
+    ? darkModeBackgroundColor
+    : getItem("theme-preference") === "light-mode"
+    ? darkModeBackgroundColor
+    : "#E5E4DB";
+};
+
+export const determineBackgroundColorForCard2 = () => {
+  return getItem("theme-preference") === null
+    ? "#FFFFFF"
+    : getItem("theme-preference") === "light-mode"
+    ? "#FFFFFF"
+    : darkModeBackgroundColor;
+};
+
+export const determineBorderColorForFreeCard = () => {
+  return getItem("theme-preference") === null
+    ? darkModeBackgroundColor
+    : getItem("theme-preference") === "light-mode"
+    ? darkModeBackgroundColor
+    : "#E5E4DB";
+};
+
+export const determineBackgroundColorForCheckbox = () => {
+  return getItem("theme-preference") === null
+    ? "#E5E4DB"
+    : getItem("theme-preference") === "light-mode"
+    ? "#E5E4DB"
+    : darkModeBackgroundColor;
+};
+
+export const determineBorderColorForCheckbox = () => {
+  return getItem("theme-preference") === null
+    ? darkModeBackgroundColor
+    : getItem("theme-preference") === "light-mode"
+    ? darkModeBackgroundColor
+    : "#E5E4DB";
+};
 export const determineBackgroundColorReverse = () => {
   return getItem("theme-preference") === null
     ? darkModeBackgroundColor
@@ -31,6 +86,14 @@ export const determineBackgroundColorReverse = () => {
 };
 
 export const determineBackgroundColorForSignUp = () => {
+  return getItem("theme-preference") === null
+    ? "#FFFFFF"
+    : getItem("theme-preference") === "light-mode"
+    ? "#FFFFFF"
+    : darkModeBackgroundColor;
+};
+
+export const determineBackgroundColorForSearchModeModal = () => {
   return getItem("theme-preference") === null
     ? "#FFFFFF"
     : getItem("theme-preference") === "light-mode"
@@ -52,6 +115,14 @@ export const determineBackgroundColorForSetNewPassword = () => {
     : getItem("theme-preference") === "light-mode"
     ? "#FFFFFF"
     : darkModeBackgroundColor;
+};
+
+export const determineBackgroundColorForCountdownTimer = () => {
+  return getItem("theme-preference") === null
+    ? "#CFCFCB"
+    : getItem("theme-preference") === "light-mode"
+    ? "#CFCFCB"
+    : "#404040";
 };
 
 export const determineBackgroundColorForLogin = () => {

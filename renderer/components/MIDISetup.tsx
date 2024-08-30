@@ -9,6 +9,9 @@ import {
 } from "../pages/main";
 import * as ColorUtils from "../utils/determineColors";
 import { Input, Output, WebMidi } from "webmidi";
+import { ipcRenderer } from "electron";
+import { getItem } from "../utils/localStorage";
+import { ProUserContext } from "../pages/home";
 
 interface Props {
   label: string;
@@ -24,12 +27,18 @@ export default function MIDISetup({ label }: Props) {
   const midiInputRef = useRef<Input>(null);
   const midiOutputRef = useRef<Output>(null);
 
+  const { isProUser } = useContext(ProUserContext);
+
   useEffect(() => {
     if (WebMidi !== undefined) {
       WebMidi.addListener("connected", handleMidiSelects);
       WebMidi.addListener("disconnected", handleMidiSelects);
 
       handleMidiSelects();
+
+      ipcRenderer.on("midi_input_selected", (_, args) => {
+        handleMidiInputSelectionByName(args[0]);
+      });
     }
   }, []);
 
@@ -72,6 +81,20 @@ export default function MIDISetup({ label }: Props) {
       }
     }
 
+    ipcRenderer.send("recreate_menu", [
+      getItem("key-preference"),
+      getItem("theme-preference"),
+      getItem("color-preference"),
+      getItem("show-chord-numbers-preference") === "true",
+      getItem("show-alt-chords-preference") === "true",
+      WebMidi.inputs.map((input) => input.name),
+      midiInput?.name,
+      isProUser,
+      getItem("enable-sound-preference") === "true",
+    ]);
+
+    // WebMidi.inputs.map((input) => input.name)
+
     if (WebMidi.outputs.length === 0) {
       setAvailableMidiOutputs([]);
       setMidiOutput(null);
@@ -94,6 +117,32 @@ export default function MIDISetup({ label }: Props) {
       midiInput.removeListener("noteoff");
       midiInput.removeListener("midimessage");
     }
+
+    setMidiInput(input);
+    midiInputRef.current = input;
+  };
+
+  // Used to communicate with main process
+  const handleMidiInputSelectionByName = (inputName: string) => {
+    if (midiInput !== null) {
+      midiInput.removeListener("noteon");
+      midiInput.removeListener("noteoff");
+      midiInput.removeListener("midimessage");
+    }
+
+    const input = WebMidi.inputs.find((input) => input.name === inputName);
+
+    ipcRenderer.send("recreate_menu", [
+      getItem("key-preference"),
+      getItem("theme-preference"),
+      getItem("color-preference"),
+      getItem("show-chord-numbers-preference") === "true",
+      getItem("show-alt-chords-preference") === "true",
+      WebMidi.inputs.map((input) => input.name),
+      inputName,
+      isProUser,
+      getItem("enable-sound-preference") === "true",
+    ]);
 
     setMidiInput(input);
     midiInputRef.current = input;

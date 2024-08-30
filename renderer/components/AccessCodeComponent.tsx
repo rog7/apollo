@@ -99,7 +99,7 @@ const AccessCodeComponent = ({
             key={index}
             ref={(ref) => (divRefs.current[index] = ref)}
             style={{
-              border: `2px solid ${determineBorderColor()}`,
+              border: `1px solid ${determineBorderColor()}`,
               borderRadius: "5px",
               width: "38px",
               height: "50px",
@@ -150,7 +150,7 @@ const AccessCodeComponent = ({
             color: determineFontColorReverse(),
           }}
         >
-          check
+          Check
         </div>
       </div>
       <div>
@@ -164,7 +164,7 @@ const AccessCodeComponent = ({
           }}
           onClick={handleReturnToLogin}
         >
-          return to login
+          Return to login
         </div>
       </div>
     </div>

@@ -1,11 +1,10 @@
-import ApolloSymbol from "../components/symbols/ApolloSymbol";
-import { createContext, useEffect, useRef, useState } from "react";
-import Main from "./main";
-import { getItem, removeItem, setItem } from "../utils/localStorage";
-import { API_BASE_URL } from "../utils/globalVars";
-import StartTrial from "../components/StartTrial";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import BuyApollo from "../components/BuyApollo";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import ApolloSymbol from "../components/symbols/ApolloSymbol";
+import * as utils from "../utils/determineColors";
+import { API_BASE_URL } from "../utils/globalVars";
+import { getItem, removeItem, setItem } from "../utils/localStorage";
+import Main, { MidiInputContext } from "./main";
 
 interface UsernameContextType {
   username: string;
@@ -29,6 +28,24 @@ export const ProfileImageUrlContext = createContext<ProfileImageUrlContextType>(
   }
 );
 
+interface ProUserContextType {
+  isProUser: boolean;
+}
+
+export const ProUserContext = createContext<ProUserContextType>({
+  isProUser: false,
+});
+
+interface PaymentLinkContextType {
+  paymentLink: string;
+  setPaymentLink: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export const PaymentLinkContext = createContext<PaymentLinkContextType>({
+  paymentLink: "",
+  setPaymentLink: () => {},
+});
+
 const Home = () => {
   const [email, setEmail] = useState("");
   const [showMain, setShowMain] = useState(false);
@@ -38,52 +55,36 @@ const Home = () => {
   const divRefs = useRef([]);
   const [code, setCode] = useState<string[]>([]);
   const [username, setUsername] = useState("");
-  const [profileImageUrl, setProfileImageUrl] = useState("");
-  const [showStartTrialScreen, setShowStartTrialScreen] = useState(false);
-  const [initiatingPaymentMethod, setInitiatingPaymentMethod] = useState(true);
-  const [completedTrial, setCompletedTrial] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isProUserVal, setIsProUserVal] = useState(false);
+  const [expirationTrialDate, setExpirationTrialDate] = useState<
+    Date | undefined
+  >(undefined);
+  const [paymentLink, setPaymentLink] = useState("");
+  const [showDiscountPopup, setShowDiscountPopup] = useState(false);
+  const { midiInput } = useContext(MidiInputContext);
 
   useEffect(() => {
-    const checkPaymentMethodInfo = async () => {
-      const authToken = getItem("auth-token");
-
-      const completedTrial = (jwt.decode(authToken) as JwtPayload)
-        .completedTrial;
-      if (!completedTrial) {
-        try {
-          const response = await fetch(
-            `${API_BASE_URL}/api/users/payment_methods`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: "Bearer " + authToken,
-                "ngrok-skip-browser-warning": "69420",
-              },
-            }
-          );
-
-          const data = await response.json();
-
-          if (response.status === 200) {
-            const paymentMethodSet = data.paymentMethodSet as boolean;
-
-            if (!paymentMethodSet) {
-              setIsLoading(false);
-              setInitiatingPaymentMethod(false);
-              setShowStartTrialScreen(true);
-              setShowMain(false);
-            } else {
-              setIsLoading(false);
-              setShowMain(true);
-            }
-          }
-        } catch (error) {
-          console.log(error);
-        }
-      }
+    const handleOnline = () => {
+      setIsOnline(true);
     };
 
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    // Clean up event listeners
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
     if (getItem("auth-token") !== null || getItem("email") !== null) {
       const tokenPayload = jwt.decode(getItem("auth-token")) as JwtPayload;
 
@@ -101,97 +102,16 @@ const Home = () => {
 
       if (email !== undefined) {
         getUserInfo(email).then(() => {
-          const tokenPayload = jwt.decode(getItem("auth-token")) as JwtPayload;
-
-          const isProUser = tokenPayload.isProUser as boolean;
-          const isTrialing = tokenPayload.isTrialing as boolean | null;
-          const completedTrial = tokenPayload.completedTrial as boolean | null;
-
-          if (isProUser || isTrialing) {
-            if (isTrialing) {
-              checkPaymentMethodInfo();
-
-              // Check if the user has a payment method set every 10 seconds
-              setInterval(() => {
-                const tokenPayload = jwt.decode(
-                  getItem("auth-token")
-                ) as JwtPayload;
-
-                if (!tokenPayload.isProUser) {
-                  checkPaymentMethodInfo();
-                }
-              }, 10000);
-
-              // Get user info every 5 seconds
-              setInterval(() => {
-                const tokenPayload = jwt.decode(
-                  getItem("auth-token")
-                ) as JwtPayload;
-
-                if (!isProUser) {
-                  getUserInfo(tokenPayload.email).then(() => {
-                    const tokenPayload = jwt.decode(
-                      getItem("auth-token")
-                    ) as JwtPayload;
-
-                    const completedTrial =
-                      tokenPayload.completedTrial as boolean;
-
-                    if (completedTrial) {
-                      setCompletedTrial(true);
-                      setShowMain(false);
-                    }
-                  });
-                } else {
-                  setIsLoading(false);
-
-                  checkPaymentMethodInfo();
-                }
-              }, 5000);
-
-              // setIsLoading(false);
-              // setShowMain(true);
-            } else {
-              setIsLoading(false);
-              setShowMain(true);
-            }
-          } else {
-            if (completedTrial) {
-              setIsLoading(false);
-              setCompletedTrial(true);
-              setShowMain(false);
-
-              // Get user info every 5 seconds
-              setInterval(() => {
-                const tokenPayload = jwt.decode(
-                  getItem("auth-token")
-                ) as JwtPayload;
-
-                console.log("token payload", tokenPayload);
-                if (!tokenPayload.isProUser) {
-                  getUserInfo(tokenPayload.email).then(() => {
-                    const tokenPayload = jwt.decode(
-                      getItem("auth-token")
-                    ) as JwtPayload;
-
-                    const isProUser = tokenPayload.isProUser as boolean;
-
-                    if (isProUser) {
-                      setIsLoading(false);
-                      setShowMain(true);
-                    }
-                  });
-                } else {
-                  setIsLoading(false);
-                  setShowMain(true);
-                }
-              }, 5000);
-            } else {
-              setIsLoading(false);
-              setShowStartTrialScreen(true);
-            }
-          }
+          setShowMain(true);
+          setIsLoading(false);
         });
+        // This will get called every 5 minutes
+        // setInterval(() => {
+        //   getUserInfo(email);
+        // }, 300000);
+        setInterval(() => {
+          getUserInfo(email);
+        }, 10000);
       } else {
         setIsLoading(false);
       }
@@ -222,6 +142,19 @@ const Home = () => {
         setUsername(data.username);
         if (data.profileImageUrl !== null) {
           setProfileImageUrl(data.profileImageUrl);
+        }
+
+        const payload = jwt.decode(getItem("auth-token")) as JwtPayload;
+        setIsProUserVal(payload.isProUser);
+
+        setExpirationTrialDate(data.expirationDate);
+        setPaymentLink(data.paymentLink);
+
+        if (
+          (data.paymentLink as string).includes("prefilled_promo_code") &&
+          getItem("seen-discount-code") !== "true"
+        ) {
+          setShowDiscountPopup(true);
         }
       }
     } catch (error) {
@@ -254,7 +187,7 @@ const Home = () => {
 
   const sendAuthCode = async () => {
     if (email === "") {
-      setErrorPlaceholder("email is required");
+      setErrorPlaceholder("Email is required");
       return;
     }
 
@@ -283,7 +216,7 @@ const Home = () => {
       }
     } catch (error) {
       setErrorPlaceholder(
-        "logging in is currently unavailable. please try again later."
+        "Logging in is currently unavailable. Please try again later."
       );
     }
   };
@@ -313,21 +246,13 @@ const Home = () => {
         setErrorPlaceholder("");
         setUsername(data.username);
 
-        const tokenPayload = jwt.decode(authToken) as JwtPayload;
-        const isProUser = tokenPayload.isProUser as boolean;
-
-        if (isProUser) {
-          setShowMain(true);
-        } else {
-          // Allow the user to start a trial before entering apollo
-          setShowStartTrialScreen(true);
-        }
+        setShowMain(true);
       } else {
         setErrorPlaceholder(data.message);
       }
     } catch (error) {
       setErrorPlaceholder(
-        "auth code check is currently unavailable. please try again later."
+        "Auth code check is currently unavailable. Please try again later."
       );
     }
   };
@@ -348,23 +273,41 @@ const Home = () => {
         <ProfileImageUrlContext.Provider
           value={{ profileImageUrl, setProfileImageUrl }}
         >
-          <Main />
+          <ProUserContext.Provider
+            value={{
+              isProUser: isProUserVal,
+              // isProUser: false,
+            }}
+          >
+            <PaymentLinkContext.Provider
+              value={{ paymentLink, setPaymentLink }}
+            >
+              {!isOnline && (
+                <div
+                  className="h-screen flex justify-center items-center"
+                  style={{ backgroundColor: utils.determineBackgroundColor() }}
+                >
+                  <p
+                    style={{
+                      color: utils.determineFontColor(),
+                    }}
+                  >
+                    You are currently offline. Please connect to the internet to
+                    access Apollo.
+                  </p>
+                </div>
+              )}
+              <div className={!isOnline ? "hidden" : ""}>
+                <Main
+                  expirationTrialDate={expirationTrialDate}
+                  showDiscountPopup={showDiscountPopup}
+                  setShowDiscountPopup={setShowDiscountPopup}
+                />
+              </div>
+            </PaymentLinkContext.Provider>
+          </ProUserContext.Provider>
         </ProfileImageUrlContext.Provider>
       </UsernameContext.Provider>
-    ) : showStartTrialScreen || completedTrial ? (
-      completedTrial ? (
-        <div className="bg-[#ECEBE8]">
-          <BuyApollo />
-        </div>
-      ) : (
-        <div className="bg-[#ECEBE8]">
-          <StartTrial
-            setShowStartTrialScreen={setShowStartTrialScreen}
-            setShowMain={setShowMain}
-            initiatingPaymentMethod={initiatingPaymentMethod}
-          />
-        </div>
-      )
     ) : (
       <div className="h-screen flex justify-center items-center bg-[#ECEBE8]">
         <div className="w-[352px] h-fit rounded-4xl border-2 border-solid border-[#E5E4DB] bg-[#FFFFFF] flex flex-col items-center py-10">
@@ -374,10 +317,10 @@ const Home = () => {
 
           {!showAccessCodeComponent ? (
             <div className="flex flex-col items-center">
-              <div className="w-[280px] h-[53px] rounded-4xl border-2 border-solid border-black flex justify-center mt-12">
+              <div className="w-[280px] h-[53px] rounded-4xl border-2 border-solid border-black flex justify-center mt-12 select-none">
                 <input
                   className="rounded-4xl border-none text-lg w-full outline-none px-2 bg-[#FFFFFF] text-black"
-                  placeholder="email"
+                  placeholder="Email"
                   spellCheck="false"
                   onChange={(e) => setEmail(e.target.value.trim())}
                 />
@@ -391,12 +334,21 @@ const Home = () => {
                 className="w-[140px] h-[53px] rounded-4xl flex items-center justify-center mt-2.5 cursor-pointer bg-[#313131]"
                 onClick={sendAuthCode}
               >
-                <div className="text-lg text-white">authorize</div>
+                <div className="text-lg text-white">Authorize</div>
               </div>
             </div>
           ) : (
             <>
-              <div className="mt-[10px] text-center flex justify-content">{`enter the 6-digit verification code sent to ${email}`}</div>
+              <div className="mt-[10px] text-center flex justify-content">
+                {" "}
+                <p
+                  style={{
+                    color: "#313131",
+                  }}
+                >
+                  {`Enter the 6-digit verification code sent to ${email}`}
+                </p>
+              </div>
               <div className="mt-[20px] flex gap-[10px]">
                 {[...Array(6)].map((_, index) => (
                   <input
@@ -413,14 +365,14 @@ const Home = () => {
                 {errorPlaceholder}
               </div>
               <div
-                className="mt-[20px] w-[140px] h-[53px] rounded-4xl flex items-center justify-center mt-2.5 cursor-pointer bg-[#313131]"
+                className="mt-[20px] w-[140px] h-[53px] rounded-4xl flex items-center justify-center cursor-pointer bg-[#313131]"
                 onClick={() => {
                   setShowAccessCodeComponent(false);
                   setErrorPlaceholder("");
                   setCode([]);
                 }}
               >
-                <div className="text-lg text-white outline-none">go back</div>
+                <div className="text-lg text-white outline-none">Go back</div>
               </div>{" "}
             </>
           )}
@@ -428,7 +380,12 @@ const Home = () => {
       </div>
     )
   ) : (
-    <></>
+    <div
+      className={`h-screen`}
+      style={{
+        backgroundColor: utils.determineBackgroundColor(),
+      }}
+    ></div>
   );
 };
 

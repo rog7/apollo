@@ -14,7 +14,7 @@ input::-webkit-inner-spin-button {
 }
 
 html * {
-  font-family: "Outfit", sans-serif;
+  font-family: "Nunito", sans-serif;
   user-select: none;
   -webkit-user-select: none;
 }

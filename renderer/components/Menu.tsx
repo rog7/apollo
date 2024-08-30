@@ -1,31 +1,48 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import DropdownList from "./DropdownList";
 import {
+  AltChordsContext,
   ColorContext,
+  EnableSoundContext,
   LiteVersionNotificationContext,
   ModeContext,
+  ShowChordNumbersContext,
   ShowPracticeRoomContext,
-  SuiteUserContext,
   ThemeContext,
 } from "../pages/main";
 import { ColorResult, BlockPicker } from "react-color";
-import { setItem } from "../utils/localStorage";
+import { getItem, setItem } from "../utils/localStorage";
 import ColorSymbol from "./symbols/ColorSymbol";
 import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
 import { AnimatePresence, motion } from "framer-motion";
 import KeySymbol from "./symbols/KeySymbol";
 import OptionsSymbol from "./symbols/OptionsSymbol";
+import { ipcRenderer } from "electron";
+import ProfileModal from "./ProfileModal";
+import { ProUserContext } from "../pages/home";
 
 const Menu = () => {
   const { color, setColor } = useContext(ColorContext);
   const { mode } = useContext(ModeContext);
   const [visibleDropdown, setDropdown] = useState("");
   const { theme } = useContext(ThemeContext);
-  const { isSuiteUser } = useContext(SuiteUserContext);
   const { triggerUpgradeNotification } = useContext(
     LiteVersionNotificationContext
   );
   const { showPracticeRoom } = useContext(ShowPracticeRoomContext);
+  const { showChordNumbers, setShowChordNumbers } = useContext(
+    ShowChordNumbersContext
+  );
+  const { showAltChords, setShowAltChords } = useContext(AltChordsContext);
+  const { enableSound, setEnableSound } = useContext(EnableSoundContext);
+
+  const showChordNumbersRef = useRef<boolean | string>(showChordNumbers);
+  const enableSoundRef = useRef<boolean | string>(enableSound);
+
+  const showAltChordNamesRef = useRef<boolean | string>(showAltChords);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const { isProUser } = useContext(ProUserContext);
+
   const handleColorChange = (newColor: ColorResult) => {
     setItem("color-preference", newColor.hex);
     setColor(newColor.hex);
@@ -47,6 +64,48 @@ const Menu = () => {
       }
     }
   });
+
+  useEffect(() => {
+    ipcRenderer.on("show_chord_numbers_clicked", setShowChordNumbersPreference);
+    ipcRenderer.on("enable_sound_clicked", handleEnableSound);
+    ipcRenderer.on(
+      "show_alt_chord_names_clicked",
+      setShowAltChordNamesPreference
+    );
+  }, []);
+
+  function setShowChordNumbersPreference() {
+    if (showChordNumbersRef.current === "false") {
+      showChordNumbersRef.current = true;
+    } else {
+      showChordNumbersRef.current = !showChordNumbersRef.current;
+    }
+
+    setItem("show-chord-numbers-preference", showChordNumbersRef.current);
+    setShowChordNumbers(showChordNumbersRef.current);
+  }
+
+  function handleEnableSound() {
+    if (enableSoundRef.current === "false") {
+      enableSoundRef.current = true;
+    } else {
+      enableSoundRef.current = !enableSoundRef.current;
+    }
+
+    setItem("enable-sound-preference", enableSoundRef.current);
+    setEnableSound(enableSoundRef.current);
+  }
+
+  function setShowAltChordNamesPreference() {
+    if (showAltChordNamesRef.current === "false") {
+      showAltChordNamesRef.current = true;
+    } else {
+      showAltChordNamesRef.current = !showAltChordNamesRef.current;
+    }
+
+    setItem("show-alt-chords-preference", showAltChordNamesRef.current);
+    setShowAltChords(showAltChordNamesRef.current);
+  }
 
   return (
     <div
@@ -84,7 +143,7 @@ const Menu = () => {
                 dropdownList={
                   !showPracticeRoom
                     ? [
-                        "edit profile",
+                        "show chord numbers",
                         mode === "detect mode"
                           ? "switch to search mode"
                           : "switch to detect mode",
@@ -92,8 +151,10 @@ const Menu = () => {
                         theme === "light-mode"
                           ? "switch to dark mode"
                           : "switch to light mode",
+                        "edit profile",
                       ]
                     : [
+                        "show chord numbers",
                         "show alt chord names",
                         theme === "light-mode"
                           ? "switch to dark mode"
@@ -195,7 +256,7 @@ const Menu = () => {
                     "#D6EACE",
                   ]}
                   onChange={
-                    isSuiteUser ? handleColorChange : triggerUpgradeNotification
+                    isProUser ? handleColorChange : triggerUpgradeNotification
                   }
                   className="premium-feature"
                   disableAlpha={true}
@@ -205,6 +266,9 @@ const Menu = () => {
           )}
         </AnimatePresence>
       </div>
+      {/* {showProfileModal && (
+        <ProfileModal setShowProfileModal={setShowProfileModal} />
+      )} */}
     </div>
   );
 };

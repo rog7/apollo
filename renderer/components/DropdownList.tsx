@@ -4,7 +4,7 @@ import {
   AltChordsContext,
   KeyContext,
   ModeContext,
-  SuiteUserContext,
+  ShowChordNumbersContext,
   ThemeContext,
 } from "../pages/main";
 import Checkmark from "./symbols/Checkmark";
@@ -15,6 +15,7 @@ import {
   lightModeFontColor,
 } from "../utils/styles";
 import ProfileModal from "./ProfileModal";
+import { ProUserContext } from "../pages/home";
 
 interface Props {
   dropdownList: string[];
@@ -32,16 +33,21 @@ const DropdownList = ({
 }: Props) => {
   const { setKey } = useContext(KeyContext);
   const { showAltChords, setShowAltChords } = useContext(AltChordsContext);
+  const { showChordNumbers, setShowChordNumbers } = useContext(
+    ShowChordNumbersContext
+  );
   const { setMode } = useContext(ModeContext);
   const { theme, setTheme } = useContext(ThemeContext);
   const { key } = useContext(KeyContext);
-  const { isSuiteUser } = useContext(SuiteUserContext);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   const setPreference = (preference: string) => {
     if (menuItem === "OPTIONS" && preference.includes("show alt")) {
       setItem("show-alt-chords-preference", !showAltChords);
       setShowAltChords(!showAltChords);
+    } else if (menuItem === "OPTIONS" && preference.includes("show chord")) {
+      setItem("show-chord-numbers-preference", !showChordNumbers);
+      setShowChordNumbers(!showChordNumbers);
     } else if (menuItem === "OPTIONS" && preference.includes("search mode")) {
       setItem("mode-preference", "search mode");
       setMode("search mode");
@@ -106,6 +112,15 @@ const DropdownList = ({
             value.includes("show alt") &&
             getItem("show-alt-chords-preference") === "true" ? (
               <div className="absolute top-[50%] left-[74%]">
+                <Checkmark />
+              </div>
+            ) : (
+              <></>
+            )}
+            {menuItem === "OPTIONS" &&
+            value.includes("show chord") &&
+            getItem("show-chord-numbers-preference") === "true" ? (
+              <div className="absolute top-[50%] left-[80%]">
                 <Checkmark />
               </div>
             ) : (

@@ -35,7 +35,7 @@ export default function StartTrial({
   useEffect(() => {
     const updateExpirationTrialDate = () => {
       const currentDate = new Date();
-      currentDate.setUTCDate(currentDate.getUTCDate() + 7); // Add 7 days
+      currentDate.setUTCDate(currentDate.getUTCDate() + 3); // Add 3 days
 
       const formattedDateTime = currentDate.toLocaleString("en-US", {
         year: "numeric",
@@ -224,7 +224,7 @@ export default function StartTrial({
 
             {initiatingPaymentMethod && (
               <div className="mt-5 text-center text-2xl font-medium">
-                try apollo for 7 days free
+                try apollo for 3 days free
               </div>
             )}
 
@@ -363,8 +363,7 @@ export default function StartTrial({
               {initiatingPaymentMethod ? (
                 <p className="mt-6 flex justify-center text-sm font-medium text-gray-500 text-center">
                   After your trial ends on {expirationTrialDate}, a one-time fee
-                  of $97 will be applied to maintain access. To cancel, email me
-                  at roger@suavekeys.com.
+                  of $117 will be applied to maintain access.
                 </p>
               ) : (
                 <p className="mt-6 flex justify-center text-sm font-medium text-gray-500 text-center">

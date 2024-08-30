@@ -2,19 +2,19 @@ import {
   lightModeFontColor,
   darkModeFontColor,
   fontFamily,
-} from "../utils/styles";
-import * as ColorUtils from "../utils/determineColors";
-import { useContext, useEffect, useRef, useState } from "react";
-import PracticeRoom from "./PracticeRoom";
+} from '../utils/styles';
+import * as ColorUtils from '../utils/determineColors';
+import { useContext, useEffect, useRef, useState } from 'react';
+import PracticeRoom from './PracticeRoom';
 import {
   ShowPracticeRoomContext,
   ShowPracticeRoomInitContext,
   ThemeContext,
-} from "../pages/main";
-import ClipboardCopy from "./ClipboardCopy";
-import { WEBSOCKET_URL } from "../utils/globalVars";
-import { ProfileImageUrlContext, UsernameContext } from "../pages/home";
-import { removeItem, setItem } from "../utils/localStorage";
+} from '../pages/main';
+import ClipboardCopy from './ClipboardCopy';
+import { WEBSOCKET_URL } from '../utils/globalVars';
+import { ProfileImageUrlContext, UsernameContext } from '../pages/home';
+import { removeItem, setItem } from '../utils/localStorage';
 
 interface ShedRoomInfo {
   isPublic: boolean;
@@ -26,9 +26,9 @@ interface ShedRoomInfo {
 }
 
 const PracticeRoomInit = () => {
-  const [errorPlaceholder, setErrorPlaceholder] = useState("");
-  const [roomName, setRoomName] = useState("");
-  const roomNameRef = useRef("");
+  const [errorPlaceholder, setErrorPlaceholder] = useState('');
+  const [roomName, setRoomName] = useState('');
+  const roomNameRef = useRef('');
   const { username } = useContext(UsernameContext);
   const { profileImageUrl } = useContext(ProfileImageUrlContext);
   const [socket, setSocket] = useState<WebSocket>(null);
@@ -42,36 +42,36 @@ const PracticeRoomInit = () => {
     []
   );
   const [shedRooms, setShedRooms] = useState<ShedRoomInfo[]>([]);
-  const [selectedOption, setSelectedOption] = useState("public shed.");
+  const [selectedOption, setSelectedOption] = useState('public shed.');
 
   useEffect(() => {
-    removeItem("room-name");
+    removeItem('room-name');
   }, []);
   const options = [
     {
-      id: "public shed.",
-      name: "public shed.",
-      description: "available to everyone.",
+      id: 'public shed.',
+      name: 'public shed.',
+      description: 'available to everyone.',
     },
     {
-      id: "invite only shed.",
-      name: "invite only shed.",
-      description: "those who have shed name can join.",
+      id: 'invite only shed.',
+      name: 'invite only shed.',
+      description: 'those who have shed name can join.',
     },
   ];
 
   const socketInit = () => {
     const newSocket = new WebSocket(WEBSOCKET_URL);
 
-    newSocket.addEventListener("open", () => {
-      console.log("Connected to WebSocket server");
+    newSocket.addEventListener('open', () => {
+      console.log('Connected to WebSocket server');
     });
 
     newSocket.onmessage = (event) => {
       handleMessageFromServer(event.data);
     };
 
-    newSocket.addEventListener("close", () => {
+    newSocket.addEventListener('close', () => {
       setShowPracticeRoom(false);
       setIsHost(false);
     });
@@ -85,12 +85,42 @@ const PracticeRoomInit = () => {
     if (!showPracticeRoom) {
       socketInit();
     }
+
+    // const socket = new Socket('ws://localhost:4000/live');
+
+    // // Handle WebSocket connection errors
+    // socket.onError((error) => console.error('WebSocket error:', error));
+
+    // // Handle successful WebSocket connection
+    // socket.onOpen(() => {
+    //   console.log('WebSocket connection opened successfully');
+
+    //   // Create and join the channel after the WebSocket connection is established
+    //   const channel = new Channel('room:jam1', {}, socket);
+
+    //   // Handle channel join errors
+    //   channel.onError((error) => console.error('Channel error:', error));
+
+    //   // Handle successful channel join
+    //   channel
+    //     .join()
+    //     .receive('ok', () => {
+    //       console.log('Joined channel successfully');
+
+    //       // Subscribe to "shout" events after successfully joining the channel
+    //       channel.on('shout', (payload) => console.log(payload.body));
+    //     })
+    //     .receive('error', (error) =>
+    //       console.error('Error joining channel:', error)
+    //     );
+    // });
+    // socket.connect();
   }, [showPracticeRoom]);
 
   const handleMessageFromServer = (data) => {
     const obj = JSON.parse(data);
 
-    if (obj.type === "shedRoomsInfo") {
+    if (obj.type === 'shedRoomsInfo') {
       const shedRoomData = obj.message as ShedRoomInfo[];
 
       setShedRooms(shedRoomData);
@@ -104,13 +134,13 @@ const PracticeRoomInit = () => {
             )
           )
         : setShedRoomsFiltered(shedRoomData.filter((room) => room.isPublic));
-    } else if (obj.type === "joinedRoom") {
+    } else if (obj.type === 'joinedRoom') {
       if (obj.message) {
-        setRoomName("");
-        roomNameRef.current = "";
+        setRoomName('');
+        roomNameRef.current = '';
         setShowPracticeRoom(true);
       }
-    } else if (obj.type === "error") {
+    } else if (obj.type === 'error') {
       setErrorPlaceholder(obj.message);
     }
   };
@@ -121,7 +151,7 @@ const PracticeRoomInit = () => {
     roomName: string
   ) => {
     const obj = {
-      type: "joinShedRoom",
+      type: 'joinShedRoom',
       is_public: isPublic,
       is_host: isHost,
       room_name: roomName,
@@ -138,14 +168,14 @@ const PracticeRoomInit = () => {
       socket.send(JSON.stringify(obj));
     }
 
-    setItem("room-name", roomName);
+    setItem('room-name', roomName);
     setRoomName(roomName);
     setIsHost(isHost);
   };
 
   const closePracticeRoom = () => {
-    setRoomName("");
-    removeItem("room-name");
+    setRoomName('');
+    removeItem('room-name');
     socket.close();
     setShowPracticeRoom(false);
     setSocket(null);
@@ -155,9 +185,9 @@ const PracticeRoomInit = () => {
     <div className="w-full h-[70vh] mt-16 flex flex-col justify-center items-center gap-[20px]">
       <div
         style={{
-          position: "absolute",
-          right: "3%",
-          top: "4.5%",
+          position: 'absolute',
+          right: '3%',
+          top: '4.5%',
         }}
       >
         <button
@@ -225,7 +255,7 @@ const PracticeRoomInit = () => {
               {shedRoomsFiltered.length > 3 && (
                 <div
                   className={`-mt-[8px] flex-none sticky w-full h-[15px] top-0 bg-gradient-to-b ${
-                    theme === "light-mode" ? "from-[#ECEBE8]" : "from-[#313131]"
+                    theme === 'light-mode' ? 'from-[#ECEBE8]' : 'from-[#313131]'
                   }`}
                 ></div>
               )}
@@ -234,7 +264,7 @@ const PracticeRoomInit = () => {
                   <div
                     className="flex-none h-[83px] rounded-2xl flex px-[15px] items-center"
                     style={{
-                      backgroundColor: "white",
+                      backgroundColor: 'white',
                     }}
                     key={index}
                   >
@@ -278,7 +308,7 @@ const PracticeRoomInit = () => {
                     <div
                       className="w-[68px] h-[36px] rounded-4xl flex items-center justify-center cursor-pointer"
                       style={{
-                        backgroundColor: "#313131",
+                        backgroundColor: '#313131',
                       }}
                       onClick={() => {
                         joinPracticeRoom(false, true, room.shedName);
@@ -292,7 +322,7 @@ const PracticeRoomInit = () => {
               {shedRoomsFiltered.length > 3 && (
                 <div
                   className={`-mt-[8px] flex-none sticky w-full h-[15px] bottom-[0%] bg-gradient-to-t ${
-                    theme === "light-mode" ? "from-[#ECEBE8]" : "from-[#313131]"
+                    theme === 'light-mode' ? 'from-[#ECEBE8]' : 'from-[#313131]'
                   }`}
                 ></div>
               )}
@@ -349,7 +379,7 @@ const PracticeRoomInit = () => {
                             }}
                           >
                             {option.name}
-                          </label>{" "}
+                          </label>{' '}
                           <span
                             id={`${option.id}-description`}
                             className="opacity-50"
@@ -372,10 +402,10 @@ const PracticeRoomInit = () => {
                   backgroundColor: ColorUtils.determineBackgroundColorReverse(),
                 }}
                 onClick={() => {
-                  setItem("room-name", roomName);
+                  setItem('room-name', roomName);
                   joinPracticeRoom(
                     true,
-                    selectedOption === "public shed.",
+                    selectedOption === 'public shed.',
                     roomName
                   );
                 }}

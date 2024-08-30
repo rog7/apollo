@@ -1,40 +1,79 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { WebMidi } from "webmidi";
-import Piano from "./Piano";
 import { detect } from "@tonaljs/chord-detect";
-import { Note } from "tonal";
-import { KeyContext, MidiInputContext, ThemeContext } from "../pages/main";
+import { useContext, useEffect, useRef, useState } from "react";
+import { Note, Progression } from "tonal";
+import { WebMidi } from "webmidi";
+import {
+  KeyContext,
+  MidiInputContext,
+  ShowHomePageContext,
+  ThemeContext,
+} from "../pages/main";
 import convertChordToCorrectKey from "../utils/chordConversion";
+import * as utils from "../utils/determineColors";
 import { getItem } from "../utils/localStorage";
 import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
-import MIDIInputSymbol from "./symbols/MIDIInputSymbol";
-import { truncate } from "original-fs";
+import Piano from "./Piano";
+import HomeSvg from "./svg/HomeSvg";
 
 interface Props {
   socket: WebSocket | null;
   roomName: string | null;
   playAccess: boolean | null;
+  showHomeButtonVal?: boolean;
 }
-const MIDIHandler = ({ socket, roomName, playAccess }: Props) => {
+
+const MIDIHandler = ({
+  socket,
+  roomName,
+  playAccess,
+  showHomeButtonVal,
+}: Props) => {
   const midiNumbers = useRef<number[]>([]);
   const chord = useRef("");
   const altChords = useRef([""]);
   const [pitchValues, setPitchValues] = useState<number[]>([]);
   const midiSetUpComplete = useRef(false);
   const { theme } = useContext(ThemeContext);
+  const [targetChord, setTargetChord] = useState("");
 
   const { midiInput } = useContext(MidiInputContext);
   const { key } = useContext(KeyContext);
   const [isFootPedalPressed, setIsFootPedalPressed] = useState(false);
+  const midiBuffer = useRef<number[][]>([]);
+  let sendTimeout = null; // Initializes timeout
+
+  const { setShowHomePage } = useContext(ShowHomePageContext);
+
+  const goBackToHomePage = () => {
+    setShowHomePage(true);
+  };
 
   useEffect(() => {
     if (WebMidi !== undefined && midiInput !== null) {
-      midiInput.removeListener("noteon");
-      midiInput.removeListener("noteoff");
       midiInput.removeListener("midimessage");
       midiInput.addListener("noteon", handleMIDIMessage);
       midiInput.addListener("noteoff", handleMIDIMessage);
       midiInput.addListener("midimessage", handleSustainPedalMessage);
+    }
+
+    if (midiInput === null && playAccess && socket !== null) {
+      midiBuffer.current = [];
+
+      for (let note = 0; note < 128; note++) {
+        midiBuffer.current.push([128, note, 0, 0]);
+      }
+
+      midiBuffer.current.push([0xb0, 64, 0, 0]);
+      const midiMessageString = midiBuffer.current.join(";");
+
+      const obj = {
+        type: "midi",
+        midi_message: midiMessageString,
+        room_name: roomName,
+        note_on_color: getItem("color-preference"),
+      };
+
+      socket.send(JSON.stringify(obj));
     }
 
     setIsFootPedalPressed(false);
@@ -42,6 +81,8 @@ const MIDIHandler = ({ socket, roomName, playAccess }: Props) => {
     midiSetUpComplete.current = true;
     chord.current = "";
     altChords.current = [""];
+    midiBuffer.current = [];
+    midiNumbers.current = [];
   }, [midiInput, playAccess]);
 
   // Function to handle incoming MIDI data
@@ -71,6 +112,22 @@ const MIDIHandler = ({ socket, roomName, playAccess }: Props) => {
             convertChordToCorrectKey(chord, getItem("key-preference") as string)
           );
 
+        if (getItem("show-chord-numbers-preference") === "true") {
+          const romanNumeralChord = Progression.toRomanNumerals(
+            getItem("key-preference") as string,
+            [chord.current]
+          )[0];
+
+          chord.current = romanNumeralChord;
+
+          altChords.current = altChords.current.map(
+            (chord) =>
+              Progression.toRomanNumerals(getItem("key-preference") as string, [
+                chord,
+              ])[0]
+          );
+        }
+
         setPitchValues(midiNumbers.current);
       } else if (status === 128 || (status === 144 && velocity === 0)) {
         midiNumbers.current = midiNumbers.current.filter(
@@ -93,17 +150,45 @@ const MIDIHandler = ({ socket, roomName, playAccess }: Props) => {
             convertChordToCorrectKey(chord, getItem("key-preference") as string)
           );
 
+        if (getItem("show-chord-numbers-preference") === "true") {
+          const romanNumeralChord = Progression.toRomanNumerals(
+            getItem("key-preference") as string,
+            [chord.current]
+          )[0];
+
+          chord.current = romanNumeralChord;
+
+          altChords.current = altChords.current.map(
+            (chord) =>
+              Progression.toRomanNumerals(getItem("key-preference") as string, [
+                chord,
+              ])[0]
+          );
+        }
         setPitchValues(midiNumbers.current);
       }
 
       if (socket !== null && playAccess) {
-        const obj = {
-          type: "midi",
-          midi_message: [status, pitch, velocity],
-          room_name: roomName,
-          note_on_color: getItem("color-preference"),
-        };
-        socket.send(JSON.stringify(obj));
+        // Add the MIDI message to the array
+        midiBuffer.current.push([status, pitch, velocity, event.timestamp]);
+
+        if (midiBuffer.current.length == 1) {
+          sendTimeout = setTimeout(() => {
+            const midiMessageString = midiBuffer.current.join(";");
+
+            const obj = {
+              type: "midi",
+              midi_message: midiMessageString,
+              room_name: roomName,
+              note_on_color: getItem("color-preference"),
+            };
+
+            socket.send(JSON.stringify(obj));
+
+            sendTimeout = null;
+            midiBuffer.current = [];
+          }, 2000);
+        }
       }
     }
   }
@@ -119,13 +204,26 @@ const MIDIHandler = ({ socket, roomName, playAccess }: Props) => {
           setIsFootPedalPressed(false);
         }
 
-        const obj = {
-          type: "midi",
-          midi_message: [0xb0, 64, pedalValue],
-          room_name: roomName,
-          note_on_color: getItem("color-preference"),
-        };
-        socket.send(JSON.stringify(obj));
+        // Add the MIDI message to the array
+        midiBuffer.current.push([0xb0, 64, pedalValue, event.timestamp]);
+
+        if (midiBuffer.current.length == 1) {
+          sendTimeout = setTimeout(() => {
+            const midiMessageString = midiBuffer.current.join(";");
+
+            const obj = {
+              type: "midi",
+              midi_message: midiMessageString,
+              room_name: roomName,
+              note_on_color: getItem("color-preference"),
+            };
+
+            socket.send(JSON.stringify(obj));
+
+            sendTimeout = null;
+            midiBuffer.current = [];
+          }, 2000);
+        }
       }
     } else {
       if (event.data[0] === 0xb0 && event.data[1] === 64) {
@@ -142,22 +240,30 @@ const MIDIHandler = ({ socket, roomName, playAccess }: Props) => {
 
   return (
     <div>
-      <div
+      {/* <div
         className="absolute top-[43%] left-[5%] font-normal text-2xl"
         style={{
           color:
-            theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
+            theme === 'light-mode' ? lightModeFontColor : darkModeFontColor,
         }}
       >
         <div
           style={{
             color:
-              theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
+              theme === 'light-mode' ? lightModeFontColor : darkModeFontColor,
           }}
         >
           Key: {key}
         </div>
-      </div>
+      </div> */}
+      {(showHomeButtonVal === undefined || showHomeButtonVal === true) && (
+        <div
+          className="cursor-pointer z-20 absolute top-[42px] left-[42px]"
+          onClick={goBackToHomePage}
+        >
+          <HomeSvg />
+        </div>
+      )}
       <div className="absolute top-[77%] left-[2%] flex gap-[5px] items-center">
         <div
           className={`w-3 h-3 rounded-full no-transition border-2 ${
@@ -181,7 +287,7 @@ const MIDIHandler = ({ socket, roomName, playAccess }: Props) => {
       <div className="absolute top-[40%] w-full flex flex-col items-center leading-8">
         {midiInput === null ? (
           <>
-            <MIDIInputSymbol />
+            {/* <MIDIInputSymbol /> */}
             <div
               className="text-lg mt-2"
               style={{
@@ -191,7 +297,15 @@ const MIDIHandler = ({ socket, roomName, playAccess }: Props) => {
                     : darkModeFontColor,
               }}
             >
-              no midi input devices selected
+              No midi input devices selected
+            </div>
+            <div
+              className="text-[64px] mt-10 font-bold"
+              style={{
+                color: utils.determineFontColor(),
+              }}
+            >
+              {targetChord}
             </div>
           </>
         ) : (

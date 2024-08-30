@@ -10,6 +10,7 @@ import { API_BASE_URL } from "../utils/globalVars";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import * as utils from "../utils/determineColors";
 
 interface Props {
   setShowProfileModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -175,7 +176,14 @@ export default function ProfileModal({ setShowProfileModal }: Props) {
 
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={setOpen}>
+      <Dialog
+        as="div"
+        className="relative z-50"
+        onClose={() => {
+          setShowProfileModal(false);
+          setOpen(false);
+        }}
+      >
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -185,10 +193,13 @@ export default function ProfileModal({ setShowProfileModal }: Props) {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          <div
+            className="fixed z-40 inset-0 bg-opacity-50 transition-opacity"
+            style={{ backgroundColor: "#313131" }}
+          />
         </Transition.Child>
 
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="fixed inset-0 z-50 w-screen overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <Transition.Child
               as={Fragment}
@@ -202,7 +213,7 @@ export default function ProfileModal({ setShowProfileModal }: Props) {
               <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
                 <div>
                   <div className="relative text-center scale-150 mt-[20px]">
-                    {profileImageUrl.length > 0 ? (
+                    {profileImageUrl !== null ? (
                       <div className="inline-block h-14 w-14 overflow-hidden rounded-full">
                         <img
                           src={profileImageUrl}
@@ -227,7 +238,19 @@ export default function ProfileModal({ setShowProfileModal }: Props) {
                       htmlFor="fileInput"
                       className="absolute bottom-[7%] left-[52.5%] h-4 w-4 cursor-pointer"
                     >
-                      <PlusCircleIcon />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="#313131"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                        />
+                      </svg>
                     </label>
                     <input
                       type="file"
@@ -242,7 +265,10 @@ export default function ProfileModal({ setShowProfileModal }: Props) {
                       {editingUsername ? (
                         <div>
                           <div className="flex items-center gap-x-2">
-                            <div>
+                            <div
+                              className="font-semibold"
+                              style={{ color: "#313131" }}
+                            >
                               {" "}
                               @
                               <input
@@ -257,7 +283,7 @@ export default function ProfileModal({ setShowProfileModal }: Props) {
                                     setUsername(inputValue);
                                   }
                                 }}
-                                className="text-base font-semibold leading-6 text-gray-900 outline-none border-b border-gray-300"
+                                className="bg-white font-semibold outline-none border-b border-gray-300"
                                 spellCheck="false"
                               />
                             </div>
@@ -293,17 +319,32 @@ export default function ProfileModal({ setShowProfileModal }: Props) {
                           >
                             @{username}
                           </Dialog.Title>
-                          <PencilSquareIcon
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="#313131"
                             className="h-4 w-4 cursor-pointer"
                             onClick={() => setEditingUsername(true)}
-                          />
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                            />
+                          </svg>
+
+                          {/* <PencilSquareIcon
+                            className="h-4 w-4 cursor-pointer"
+                            onClick={() => setEditingUsername(true)}
+                          /> */}
                         </>
                       )}
                     </div>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">
-                        add your unique touch by uploading a cool pic and
-                        setting a username.
+                        Upload a fire pic and choose a dope username.
                       </p>
                     </div>
                   </div>
@@ -319,7 +360,7 @@ export default function ProfileModal({ setShowProfileModal }: Props) {
                       setUsername(previousUsername);
                     }}
                   >
-                    go back to main
+                    Go back.
                   </button>
                 </div>
               </Dialog.Panel>
