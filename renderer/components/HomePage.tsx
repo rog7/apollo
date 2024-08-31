@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { ProUserContext } from "../pages/home";
 import {
   ModeContext,
@@ -31,10 +31,16 @@ const HomePage = ({ expirationTrialDate }: Props) => {
     setShowHomePage(false);
   };
 
+  const isProUserRef = useRef(isProUser);
+
+  useEffect(() => {
+    isProUserRef.current = isProUser;
+  }, [isProUser]);
+
   useEffect(() => {
     document.querySelectorAll(".premium-feature").forEach((element) => {
       element.addEventListener("click", () => {
-        !isProUser && setShowPricingTable(true);
+        !isProUserRef.current && setShowPricingTable(true);
       });
     });
   }, []);

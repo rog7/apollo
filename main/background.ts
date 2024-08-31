@@ -146,7 +146,10 @@ if (isProd) {
             label: "Enable Sound",
             type: "checkbox",
             click: () => {
-              mainWindow.webContents.send("enable_sound_clicked");
+              mainWindow.webContents.send("enable_sound_clicked", [
+                ...args.slice(0, 8),
+                !args[8],
+              ]);
             },
             accelerator: "CmdOrCtrl+Shift+S",
             checked: args[8] === true,

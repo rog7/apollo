@@ -1,5 +1,8 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import DropdownList from "./DropdownList";
+import { ipcRenderer } from "electron";
+import { AnimatePresence, motion } from "framer-motion";
+import { useContext, useEffect, useRef, useState } from "react";
+import { BlockPicker, ColorResult } from "react-color";
+import { ProUserContext } from "../pages/home";
 import {
   AltChordsContext,
   ColorContext,
@@ -10,16 +13,12 @@ import {
   ShowPracticeRoomContext,
   ThemeContext,
 } from "../pages/main";
-import { ColorResult, BlockPicker } from "react-color";
-import { getItem, setItem } from "../utils/localStorage";
-import ColorSymbol from "./symbols/ColorSymbol";
+import { setItem } from "../utils/localStorage";
 import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
-import { AnimatePresence, motion } from "framer-motion";
+import DropdownList from "./DropdownList";
+import ColorSymbol from "./symbols/ColorSymbol";
 import KeySymbol from "./symbols/KeySymbol";
 import OptionsSymbol from "./symbols/OptionsSymbol";
-import { ipcRenderer } from "electron";
-import ProfileModal from "./ProfileModal";
-import { ProUserContext } from "../pages/home";
 
 const Menu = () => {
   const { color, setColor } = useContext(ColorContext);

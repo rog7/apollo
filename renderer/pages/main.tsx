@@ -344,10 +344,8 @@ export default function Main({
     });
 
     ipcRenderer.on("color_changed", (_, args: any[]) => {
-      setItem("color-preference", args[9]);
-      setColor(args[9]);
-      args.pop();
-      console.log(args);
+      setItem("color-preference", args[2]);
+      setColor(args[2]);
       ipcRenderer.send("recreate_menu", args);
     });
 
@@ -358,6 +356,10 @@ export default function Main({
     ipcRenderer.on("premium_feature_clicked", (_, args) =>
       handleShowingPricingTable(args)
     );
+
+    ipcRenderer.on("enable_sound_clicked", (_, args: any[]) => {
+      ipcRenderer.send("recreate_menu", args);
+    });
 
     const authToken = getItem("auth-token");
 
