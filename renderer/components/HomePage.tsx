@@ -8,10 +8,8 @@ import {
 } from "../pages/main";
 import * as utils from "../utils/determineColors";
 import { setItem } from "../utils/localStorage";
-import LockComponent from "./LockComponent";
 import DetectModeSvg from "./svg/DetectModeSvg";
 import EnterModeArrow from "./svg/EnterModeArrow";
-import LockSvg from "./svg/LockSvg";
 import PracticeModeSvg from "./svg/PracticeModeSvg";
 import SearchModeSvg from "./svg/SearchModeSvg";
 

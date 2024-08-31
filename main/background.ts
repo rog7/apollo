@@ -1,8 +1,8 @@
-import { Menu, app, dialog, ipcMain } from "electron";
-import serve from "electron-serve";
-import { createWindow } from "./helpers";
-import { autoUpdater } from "electron-updater";
+import { Menu, app, ipcMain } from "electron";
 import prompt from "electron-prompt";
+import serve from "electron-serve";
+import { autoUpdater } from "electron-updater";
+import { createWindow } from "./helpers";
 
 import { powerSaveBlocker } from "electron";
 
