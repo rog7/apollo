@@ -15,6 +15,7 @@ import PracticeModeSvgTop from "./svg/PracticeModeSvgTop";
 import _ from "lodash";
 import { ShowPricingTableContext } from "../pages/main";
 import { generateChords } from "../utils/generateChords";
+import React from "react";
 
 interface Props {
   onGoingBackToSetup: () => void;

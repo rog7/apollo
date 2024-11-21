@@ -54,7 +54,7 @@ const MultiPlayerMIDIHandler = ({
   const [pitchValues, setPitchValues] = useState<number[]>([]);
   const { theme } = useContext(ThemeContext);
 
-  const { midiInput } = useContext(MidiInputContext);
+  const { midiInputs } = useContext(MidiInputContext);
   const { key } = useContext(KeyContext);
   const [isFootPedalPressed, setIsFootPedalPressed] = useState(false);
 
@@ -103,17 +103,19 @@ const MultiPlayerMIDIHandler = ({
   }, [isGameOver, startTimer, minute, second]);
 
   useEffect(() => {
-    if (WebMidi !== undefined && midiInput !== null) {
-      midiInput.removeListener("midimessage");
-      midiInput.addListener("noteon", handleMIDIMessage);
-      midiInput.addListener("noteoff", handleMIDIMessage);
-      midiInput.addListener("midimessage", handleSustainPedalMessage);
+    if (WebMidi !== undefined) {
+      midiInputs.forEach((input) => {
+        input.removeListener("midimessage");
+        input.addListener("noteon", handleMIDIMessage);
+        input.addListener("noteoff", handleMIDIMessage);
+        input.addListener("midimessage", handleSustainPedalMessage);
+      });
     }
 
     setIsFootPedalPressed(false);
     setPitchValues([]);
     midiNumbers.current = [];
-  }, [midiInput]);
+  }, [midiInputs]);
 
   useEffect(() => {
     socket.on("first_to_solve", async (obj) => {
@@ -454,7 +456,7 @@ const MultiPlayerMIDIHandler = ({
             Sustain
           </div>
         </div>
-        {midiInput === null ? (
+        {midiInputs.length === 0 ? (
           <div className="absolute top-[40%] w-full flex flex-col items-center leading-8">
             {/* <MIDIInputSymbol /> */}
             <div
@@ -466,7 +468,7 @@ const MultiPlayerMIDIHandler = ({
                     : darkModeFontColor,
               }}
             >
-              No midi input devices selected
+              No MIDI input detected. Connect a device to begin.
             </div>
           </div>
         ) : (

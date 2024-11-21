@@ -10,7 +10,6 @@ import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
 import Piano from "./Piano";
 import EnterModeArrow from "./svg/EnterModeArrow";
 import PracticeModeSvgTop from "./svg/PracticeModeSvgTop";
-import MIDIInputSymbol from "./symbols/MIDIInputSymbol";
 
 interface Props {
   isSoloPlay: boolean;
@@ -33,7 +32,7 @@ const SoloPlayMIDIHandler = ({
   const [targetChord, setTargetChord] = useState("");
   const targetChordRef = useRef(targetChord);
 
-  const { midiInput } = useContext(MidiInputContext);
+  const { midiInputs } = useContext(MidiInputContext);
   const { key } = useContext(KeyContext);
   const [isFootPedalPressed, setIsFootPedalPressed] = useState(false);
 
@@ -88,17 +87,19 @@ const SoloPlayMIDIHandler = ({
   }, []);
 
   useEffect(() => {
-    if (WebMidi !== undefined && midiInput !== null) {
-      midiInput.removeListener("midimessage");
-      midiInput.addListener("noteon", handleMIDIMessage);
-      midiInput.addListener("noteoff", handleMIDIMessage);
-      midiInput.addListener("midimessage", handleSustainPedalMessage);
+    if (WebMidi !== undefined) {
+      midiInputs.forEach((input) => {
+        input.removeListener("midimessage");
+        input.addListener("noteon", handleMIDIMessage);
+        input.addListener("noteoff", handleMIDIMessage);
+        input.addListener("midimessage", handleSustainPedalMessage);
+      });
     }
 
     setIsFootPedalPressed(false);
     setPitchValues([]);
     midiNumbers.current = [];
-  }, [midiInput]);
+  }, [midiInputs]);
 
   // Function to handle incoming MIDI data
   function handleMIDIMessage(event: any) {
@@ -272,9 +273,9 @@ const SoloPlayMIDIHandler = ({
             Sustain
           </div>
         </div>
-        {midiInput === null ? (
+        {midiInputs.length === 0 ? (
           <div className="absolute top-[40%] w-full flex flex-col items-center leading-8">
-            <MIDIInputSymbol />
+            {/* <MIDIInputSymbol /> */}
             <div
               className="text-lg mt-2"
               style={{
@@ -284,7 +285,7 @@ const SoloPlayMIDIHandler = ({
                     : darkModeFontColor,
               }}
             >
-              No midi input devices selected
+              No MIDI input detected. Connect a device to begin.
             </div>
           </div>
         ) : (

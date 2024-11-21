@@ -8,7 +8,6 @@ import convertChordToCorrectKey from "../utils/chordConversion";
 import { getItem } from "../utils/localStorage";
 import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
 import MIDIInputSymbol from "./symbols/MIDIInputSymbol";
-import teoria from "teoria";
 
 const FreeMIDIHandler = () => {
   const midiNumbers = useRef<number[]>([]);
@@ -19,16 +18,18 @@ const FreeMIDIHandler = () => {
   const midiSetUpComplete = useRef(false);
   const { theme } = useContext(ThemeContext);
 
-  const { midiInput } = useContext(MidiInputContext);
+  const { midiInputs } = useContext(MidiInputContext);
   const { key } = useContext(KeyContext);
   const [isFootPedalPressed, setIsFootPedalPressed] = useState(false);
 
   useEffect(() => {
-    if (WebMidi !== undefined && midiInput !== null) {
-      midiInput.removeListener("midimessage");
-      midiInput.addListener("noteon", handleMIDIMessage);
-      midiInput.addListener("noteoff", handleMIDIMessage);
-      midiInput.addListener("midimessage", handleSustainPedalMessage);
+    if (WebMidi !== undefined) {
+      midiInputs.forEach((input) => {
+        input.removeListener("midimessage");
+        input.addListener("noteon", handleMIDIMessage);
+        input.addListener("noteoff", handleMIDIMessage);
+        input.addListener("midimessage", handleSustainPedalMessage);
+      });
     }
 
     setIsFootPedalPressed(false);
@@ -37,7 +38,7 @@ const FreeMIDIHandler = () => {
     chord.current = "";
     altChords.current = [""];
     chordQuality.current = "";
-  }, [midiInput]);
+  }, [midiInputs]);
 
   // Function to handle incoming MIDI data
   function handleMIDIMessage(event: any) {
@@ -170,7 +171,7 @@ const FreeMIDIHandler = () => {
         </div>
       </div>
       <div className="absolute top-[40%] w-full flex flex-col items-center leading-8">
-        {midiInput === null ? (
+        {midiInputs.length === 0 ? (
           <>
             {/* <MIDIInputSymbol /> */}
             <div
@@ -182,7 +183,7 @@ const FreeMIDIHandler = () => {
                     : darkModeFontColor,
               }}
             >
-              No midi input devices selected
+              No MIDI input detected. Connect a device to begin.
             </div>
           </>
         ) : (

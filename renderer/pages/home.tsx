@@ -4,7 +4,8 @@ import ApolloSymbol from "../components/symbols/ApolloSymbol";
 import * as utils from "../utils/determineColors";
 import { API_BASE_URL } from "../utils/globalVars";
 import { getItem, removeItem, setItem } from "../utils/localStorage";
-import Main, { MidiInputContext } from "./main";
+import Main, { EnableFreeVersionContext, MidiInputContext } from "./main";
+import React from "react";
 
 interface UsernameContextType {
   username: string;
@@ -63,11 +64,18 @@ const Home = () => {
   >(undefined);
   const [paymentLink, setPaymentLink] = useState("");
   const [showDiscountPopup, setShowDiscountPopup] = useState(false);
-  const { midiInput } = useContext(MidiInputContext);
+  const { setEnableFreeVersion } = useContext(EnableFreeVersionContext);
 
   useEffect(() => {
     const handleOnline = () => {
-      setIsOnline(true);
+      if (getItem("auth-token") !== null) {
+        const tokenPayload = jwt.decode(getItem("auth-token")) as JwtPayload;
+        const email = tokenPayload?.email;
+
+        if (email !== undefined) {
+          getUserInfo(email).then(() => setIsOnline(true));
+        }
+      }
     };
 
     const handleOffline = () => {
@@ -105,13 +113,10 @@ const Home = () => {
           setShowMain(true);
           setIsLoading(false);
         });
-        // This will get called every 5 minutes
-        // setInterval(() => {
-        //   getUserInfo(email);
-        // }, 300000);
+        // This will get called every 30 seconds
         setInterval(() => {
           getUserInfo(email);
-        }, 10000);
+        }, 30000);
       } else {
         setIsLoading(false);
       }
@@ -146,9 +151,9 @@ const Home = () => {
 
         const payload = jwt.decode(getItem("auth-token")) as JwtPayload;
         setIsProUserVal(payload.isProUser);
-
         setExpirationTrialDate(data.expirationDate);
         setPaymentLink(data.paymentLink);
+        setEnableFreeVersion(data.enableFreeVersion);
 
         if (
           (data.paymentLink as string).includes("prefilled_promo_code") &&
@@ -160,6 +165,18 @@ const Home = () => {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handleEnableFreeVersion = (enableFreeVersion: boolean) => {
+    setEnableFreeVersion(enableFreeVersion);
+  };
+
+  const handleExpirationTrialDate = (expirationTrialDate: Date | undefined) => {
+    setExpirationTrialDate(expirationTrialDate);
+  };
+
+  const handleIsProUser = (isProUser: boolean) => {
+    setIsProUserVal(isProUser);
   };
 
   const handleInputChange = async (event, index) => {
@@ -245,7 +262,6 @@ const Home = () => {
 
         setErrorPlaceholder("");
         setUsername(data.username);
-
         setShowMain(true);
       } else {
         setErrorPlaceholder(data.message);
@@ -302,6 +318,9 @@ const Home = () => {
                   expirationTrialDate={expirationTrialDate}
                   showDiscountPopup={showDiscountPopup}
                   setShowDiscountPopup={setShowDiscountPopup}
+                  onEnableFreeVersion={handleEnableFreeVersion}
+                  onExpirationTrialDate={handleExpirationTrialDate}
+                  onIsProUser={handleIsProUser}
                 />
               </div>
             </PaymentLinkContext.Provider>

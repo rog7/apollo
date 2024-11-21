@@ -310,10 +310,10 @@ if (isProd) {
           },
         ],
       },
-      {
-        label: "Midi Input",
-        submenu: midiInputSubMenu,
-      },
+      // {
+      //   label: "Midi Input",
+      //   submenu: midiInputSubMenu,
+      // },
     ];
 
     // Rebuild the menu

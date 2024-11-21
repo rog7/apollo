@@ -18,6 +18,7 @@ import { API_BASE_URL, BILLING_PORTAL_URL } from "../utils/globalVars";
 import { getItem, setItem } from "../utils/localStorage";
 import { shell } from "electron";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import React from "react";
 
 interface Props {
   setShowStartTrialScreen: React.Dispatch<React.SetStateAction<boolean>>;

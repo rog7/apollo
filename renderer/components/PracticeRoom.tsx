@@ -1,10 +1,6 @@
-import {
-  ChatBubbleOvalLeftIcon,
-  SpeakerWaveIcon,
-  SpeakerXMarkIcon,
-} from "@heroicons/react/24/outline";
+import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
 import { detect } from "@tonaljs/chord-detect";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { Note, Progression } from "tonal";
 import { UsernameContext } from "../pages/home";
 import {
@@ -19,13 +15,10 @@ import { getItem } from "../utils/localStorage";
 import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
 import MIDIHandler from "./MIDIHandler";
 
+import { Output } from "webmidi";
 import Piano from "./Piano";
 import PlayAccessNotification from "./PlayAccessNotification";
 import DefaultProfilePic from "./symbols/DefaultProfilePic";
-import path from "path";
-import fs from "fs";
-import { Output, WebMidi } from "webmidi";
-import { TIME_ALLOWED_TO_SEND_MIDI_MESSAGE } from "../utils/globalVars";
 
 interface GuestInfo {
   username: string;
@@ -60,7 +53,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
 
   const { theme } = useContext(ThemeContext);
   const { key } = useContext(KeyContext);
-  const { midiInput } = useContext(MidiInputContext);
+  const { midiInputs } = useContext(MidiInputContext);
   const [message, setMessage] = useState("");
   const [receivedMessages, setReceivedMessages] = useState<MessageInfo[]>([]);
   const [showRedDot, setShowRedDot] = useState(false);
@@ -254,8 +247,8 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
         if (playAccess !== access) {
           setPlayAccess(access);
           setShowPlayAccessNotification(true);
-          if (!access && midiInput !== null) {
-            midiInput.removeListener("midimessage");
+          if (!access) {
+            midiInputs.forEach((input) => input.removeListener("midimessage"));
           }
         }
       }

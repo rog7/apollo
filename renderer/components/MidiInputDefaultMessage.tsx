@@ -1,19 +1,18 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { Input } from "webmidi";
-import MIDIInputSymbol from "./symbols/MIDIInputSymbol";
-import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
 import { ThemeContext } from "../pages/main";
+import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
 
 interface Props {
-  midiInput: Input | null;
+  midiInputs: Input[] | null;
 }
 
-const MidiInputDefaultMessage = ({ midiInput }: Props) => {
+const MidiInputDefaultMessage = ({ midiInputs }: Props) => {
   const { theme } = useContext(ThemeContext);
 
   return (
     <div className="absolute top-[40%] w-full flex flex-col items-center leading-8">
-      {midiInput === null && (
+      {midiInputs.length === 0 && (
         <>
           {/* <MIDIInputSymbol /> */}
           <div
@@ -23,7 +22,7 @@ const MidiInputDefaultMessage = ({ midiInput }: Props) => {
                 theme === "light-mode" ? lightModeFontColor : darkModeFontColor,
             }}
           >
-            No midi input devices selected
+            No MIDI input detected. Connect a device to begin.
           </div>
         </>
       )}

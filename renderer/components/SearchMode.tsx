@@ -1,7 +1,6 @@
 import { detect } from "@tonaljs/chord-detect";
 import "animate.css";
 import { useContext, useEffect, useRef, useState } from "react";
-import Soundfont from "soundfont-player";
 import { Note } from "tonal";
 import { WebMidi } from "webmidi";
 import {
@@ -26,6 +25,7 @@ import ArrowBackSymbol from "./symbols/ArrowBackSymbol";
 import ArrowForwardSymbol from "./symbols/ArrowForwardSymbol";
 import CancelSymbol from "./symbols/CancelSymbol";
 import SearchSymbol from "./symbols/SearchSymbol";
+import React from "react";
 
 interface Props {
   noteOnColor: string;
@@ -54,7 +54,7 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
   const { showAltChords } = useContext(AltChordsContext);
   const { key } = useContext(KeyContext);
   const { theme } = useContext(ThemeContext);
-  const { midiInput } = useContext(MidiInputContext);
+  const { midiInputs } = useContext(MidiInputContext);
   const { setShowPracticeRoom } = useContext(ShowPracticeRoomContext);
   const [showPopupModal, setShowPopupModal] = useState(
     getItem("show-search-modal-popup") === "true" ||
@@ -74,14 +74,10 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
   };
 
   useEffect(() => {
-    if (WebMidi !== undefined) {
-      for (const input of WebMidi.inputs) {
-        if (input === midiInput) {
-          input.addListener("noteon", handleMIDIMessage);
-          input.addListener("noteoff", handleMIDIMessage);
-        }
-      }
-    }
+    midiInputs.forEach((input) => {
+      input.addListener("noteon", handleMIDIMessage);
+      input.addListener("noteoff", handleMIDIMessage);
+    });
 
     const interval = setInterval(() => {
       const div = document.querySelector(".search");
@@ -100,7 +96,7 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
       window.removeEventListener("keyup", handleKeyUp);
       clearInterval(interval);
     };
-  }, [midiInput]);
+  }, [midiInputs]);
 
   useEffect(() => {
     if (searchResults.length > 0) {
@@ -674,7 +670,7 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
             )}
           </>
         )}
-        <MidiInputDefaultMessage midiInput={midiInput} />
+        <MidiInputDefaultMessage midiInputs={midiInputs} />
         <div className="fixed bottom-0">
           {!isSearching ? (
             <div className="no-transition h-[18vh] w-screen flex relative">

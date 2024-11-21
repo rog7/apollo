@@ -195,25 +195,37 @@ const HomePage = ({ expirationTrialDate }: Props) => {
           </div>
         </div>
       </div>
-      {expirationTrialDate !== undefined && (
-        <div className="absolute bottom-10 font-bold">
-          <p
-            style={{
-              color: utils.determineFontColor(),
-            }}
-          >
-            Trial End Date:{" "}
-            {new Date(expirationTrialDate).toLocaleString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-              // hour: "2-digit",
-              // minute: "2-digit",
-              // timeZoneName: "short",
-            })}
-          </p>
-        </div>
-      )}
+      {expirationTrialDate !== undefined &&
+        (new Date(expirationTrialDate).getTime() / 1000 >
+        Math.floor(Date.now() / 1000) ? (
+          <div className="absolute bottom-10 font-bold">
+            <p
+              style={{
+                color: utils.determineFontColor(),
+              }}
+            >
+              Trial End Date:{" "}
+              {new Date(expirationTrialDate).toLocaleString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                // hour: "2-digit",
+                // minute: "2-digit",
+                // timeZoneName: "short",
+              })}
+            </p>
+          </div>
+        ) : (
+          <div className="absolute bottom-10 font-bold">
+            <p
+              style={{
+                color: utils.determineFontColor(),
+              }}
+            >
+              Your trial has ended.
+            </p>
+          </div>
+        ))}
     </div>
   );
 };

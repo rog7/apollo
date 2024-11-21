@@ -3,6 +3,7 @@ import React, { useContext } from "react";
 
 import * as utils from "../utils/determineColors";
 import { PaymentLinkContext, ProUserContext } from "../pages/home";
+import { EnableFreeVersionContext } from "../pages/main";
 
 interface Props {
   isTrialing?: boolean;
@@ -11,12 +12,19 @@ interface Props {
 const PremiumButton = ({ isTrialing }: Props) => {
   const { isProUser } = useContext(ProUserContext);
   const { paymentLink } = useContext(PaymentLinkContext);
+  const { enableFreeVersion } = useContext(EnableFreeVersionContext);
 
   return (
     <div className="fixed top-[42px] right-[42px]">
       <div
         className={`${
-          !isTrialing ? "hidden" : ""
+          isProUser
+            ? isTrialing
+              ? ""
+              : "hidden"
+            : enableFreeVersion
+            ? ""
+            : "hidden"
         } z-50 cursor-pointer flex justify-center items-center rounded-4xl w-[182px] h-[44px]`}
         onClick={() => shell.openExternal(paymentLink)}
         style={{
