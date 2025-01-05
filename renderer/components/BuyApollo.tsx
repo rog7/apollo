@@ -58,8 +58,8 @@ const BuyApollo = () => {
             Secure Payment
           </p>
           <p className="mt-6 flex justify-center text-sm font-medium text-gray-500 text-center">
-            Your trial has ended. To continue enjoying Apollo's premium
-            features, become a pro member today.
+            To continue enjoying Apollo's premium features, become a pro member
+            today.
           </p>
         </div>
       </div>

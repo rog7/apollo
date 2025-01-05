@@ -1,11 +1,16 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import ApolloSymbol from "../components/symbols/ApolloSymbol";
 import * as utils from "../utils/determineColors";
 import { API_BASE_URL } from "../utils/globalVars";
 import { getItem, removeItem, setItem } from "../utils/localStorage";
-import Main, { EnableFreeVersionContext, MidiInputContext } from "./main";
-import React from "react";
+import Main, { EnableFreeVersionContext } from "./main";
 
 interface UsernameContextType {
   username: string;

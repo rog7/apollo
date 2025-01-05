@@ -9,6 +9,11 @@ import {
   ThemeContext,
 } from "../pages/main";
 import convertChordToCorrectKey from "../utils/chordConversion";
+import {
+  HOLD_PEDAL_CONTROL_NUMBER,
+  NOTE_OFF,
+  NOTE_ON,
+} from "../utils/globalVars";
 import { getItem } from "../utils/localStorage";
 import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
 import Piano from "./Piano";
@@ -90,7 +95,9 @@ const MIDIHandler = ({
   function handleMIDIMessage(event: any) {
     if (event.data.length === 3) {
       const [status, pitch, velocity] = event.data;
-      if (status === 144 && velocity !== 0) {
+      const type = event.type;
+
+      if (type == NOTE_ON) {
         midiNumbers.current = Array.from(
           new Set(midiNumbers.current.concat(pitch))
         ).sort((a, b) => {
@@ -130,7 +137,7 @@ const MIDIHandler = ({
         }
 
         setPitchValues(midiNumbers.current);
-      } else if (status === 128 || (status === 144 && velocity === 0)) {
+      } else if (type == NOTE_OFF) {
         midiNumbers.current = midiNumbers.current.filter(
           (value) => value !== pitch
         );
@@ -194,48 +201,104 @@ const MIDIHandler = ({
     }
   }
 
+  function handleMIDIMessageFromRecommendation(type: string, pitch: number) {
+    if (type == NOTE_ON) {
+      midiNumbers.current = Array.from(
+        new Set(midiNumbers.current.concat(pitch))
+      ).sort((a, b) => {
+        return a - b;
+      });
+
+      const chords = detect(
+        midiNumbers.current.map((value) => Note.fromMidi(value)),
+        { assumePerfectFifth: true }
+      );
+
+      chord.current = convertChordToCorrectKey(
+        chords[0],
+        getItem("key-preference") as string
+      );
+
+      altChords.current = chords
+        .slice(1, 4)
+        .map((chord) =>
+          convertChordToCorrectKey(chord, getItem("key-preference") as string)
+        );
+
+      if (getItem("show-chord-numbers-preference") === "true") {
+        const romanNumeralChord = Progression.toRomanNumerals(
+          getItem("key-preference") as string,
+          [chord.current]
+        )[0];
+
+        chord.current = romanNumeralChord;
+
+        altChords.current = altChords.current.map(
+          (chord) =>
+            Progression.toRomanNumerals(getItem("key-preference") as string, [
+              chord,
+            ])[0]
+        );
+      }
+
+      setPitchValues(midiNumbers.current);
+    } else if (type == NOTE_OFF) {
+      midiNumbers.current = midiNumbers.current.filter(
+        (value) => value !== pitch
+      );
+
+      const chords = detect(
+        midiNumbers.current.map((value) => Note.fromMidi(value)),
+        { assumePerfectFifth: true }
+      );
+
+      chord.current = convertChordToCorrectKey(
+        chords[0],
+        getItem("key-preference") as string
+      );
+
+      altChords.current = chords
+        .slice(1, 4)
+        .map((chord) =>
+          convertChordToCorrectKey(chord, getItem("key-preference") as string)
+        );
+
+      if (getItem("show-chord-numbers-preference") === "true") {
+        const romanNumeralChord = Progression.toRomanNumerals(
+          getItem("key-preference") as string,
+          [chord.current]
+        )[0];
+
+        chord.current = romanNumeralChord;
+
+        altChords.current = altChords.current.map(
+          (chord) =>
+            Progression.toRomanNumerals(getItem("key-preference") as string, [
+              chord,
+            ])[0]
+        );
+      }
+      setPitchValues(midiNumbers.current);
+    }
+  }
+
   function handleSustainPedalMessage(event: any) {
-    if (socket !== null) {
-      if (event.data[0] === 0xb0 && event.data[1] === 64) {
-        const pedalValue = event.data[2]; // Pedal value ranging from 0 to 127
+    const [status, controlNumber, pedalValue] = event.data;
 
-        if (pedalValue === 127) {
-          setIsFootPedalPressed(true);
-        } else {
-          setIsFootPedalPressed(false);
-        }
-
-        // Add the MIDI message to the array
-        midiBuffer.current.push([0xb0, 64, pedalValue, event.timestamp]);
-
-        if (midiBuffer.current.length == 1) {
-          sendTimeout = setTimeout(() => {
-            const midiMessageString = midiBuffer.current.join(";");
-
-            const obj = {
-              type: "midi",
-              midi_message: midiMessageString,
-              room_name: roomName,
-              note_on_color: getItem("color-preference"),
-            };
-
-            socket.send(JSON.stringify(obj));
-
-            sendTimeout = null;
-            midiBuffer.current = [];
-          }, 2000);
-        }
+    if (controlNumber == HOLD_PEDAL_CONTROL_NUMBER) {
+      if (pedalValue >= 64) {
+        setIsFootPedalPressed(true);
+      } else {
+        setIsFootPedalPressed(false);
       }
+    }
+  }
+
+  function handleSustainPedalMessageForRecommendation(pedalValue: number) {
+    if (pedalValue >= 64) {
+      setIsFootPedalPressed(true);
     } else {
-      if (event.data[0] === 0xb0 && event.data[1] === 64) {
-        const pedalValue = event.data[2]; // Pedal value ranging from 0 to 127
-
-        if (pedalValue === 127) {
-          setIsFootPedalPressed(true);
-        } else {
-          setIsFootPedalPressed(false);
-        }
-      }
+      setIsFootPedalPressed(false);
     }
   }
 

@@ -12,6 +12,7 @@ import React, {
 } from "react";
 import Soundfont from "soundfont-player";
 import { Input, Output, WebMidi } from "webmidi";
+import AIMIDIHandler from "../components/AIMIDIHandler";
 import BuyApollo from "../components/BuyApollo";
 import FreeMIDIHandler from "../components/FreeMIDIHandler";
 import HomePage from "../components/HomePage";
@@ -109,6 +110,17 @@ export const ThemeContext = createContext<ThemeContextType>({
   setTheme: () => {},
 });
 
+interface AIRecommendationIntervalContextType {
+  recommendationInterval: number;
+  setRecommendationInterval: React.Dispatch<React.SetStateAction<number>>;
+}
+
+export const AIRecommendationIntervalContext =
+  createContext<AIRecommendationIntervalContextType>({
+    recommendationInterval: 5,
+    setRecommendationInterval: () => {},
+  });
+
 interface LiteVersionNotificationContextType {
   showLiteVersionNotification: boolean;
   setShowLiteVersionNotification: React.Dispatch<React.SetStateAction<boolean>>;
@@ -168,13 +180,13 @@ export const MidiInputContext = createContext<MidiInputContextType>({
 });
 
 interface MidiOutputContextType {
-  midiOutput: Output;
-  setMidiOutput: React.Dispatch<React.SetStateAction<Output>>;
+  midiOutputs: Output[];
+  setMidiOutputs: React.Dispatch<React.SetStateAction<Output[]>>;
 }
 
 export const MidiOutputContext = createContext<MidiOutputContextType>({
-  midiOutput: null,
-  setMidiOutput: () => {},
+  midiOutputs: [],
+  setMidiOutputs: () => {},
 });
 
 interface ShowHomePageContextType {
@@ -240,6 +252,7 @@ export default function Main({
   let themePreference: string;
   let showChordNumbersPreference: boolean;
   let enableSoundPreference: boolean;
+  let aiRecommendationIntervalPreference: number;
 
   if (getItem("enable-sound-preference") === null) {
     enableSoundPreference = true;
@@ -250,6 +263,23 @@ export default function Main({
     } else {
       enableSoundPreference = false;
     }
+  }
+
+  if (getItem("ai-rec-interval-preference") === null) {
+    aiRecommendationIntervalPreference = 2;
+    setItem("ai-rec-interval-preference", aiRecommendationIntervalPreference);
+  } else {
+    aiRecommendationIntervalPreference = getItem(
+      "ai-rec-interval-preference"
+    ) as number;
+  }
+
+  if (getItem("show-ai-recommendations") === null) {
+    setItem("show-ai-recommendations", true);
+  }
+
+  if (getItem("show-rec-progress-bar") === null) {
+    setItem("show-rec-progress-bar", true);
   }
 
   if (getItem("color-preference") === null) {
@@ -304,9 +334,12 @@ export default function Main({
     showChordNumbersPreference
   );
   const [enableSound, setEnableSound] = useState(enableSoundPreference);
+  const [recommendationInterval, setRecommendationInterval] = useState(
+    aiRecommendationIntervalPreference
+  );
 
   const [midiInputs, setMidiInputs] = useState<Input[]>([]);
-  const [midiOutput, setMidiOutput] = useState<Output>(null);
+  const [midiOutputs, setMidiOutputs] = useState<Output[]>([]);
   const [theme, setTheme] = useState(themePreference);
   const [showLiteVersionNotification, setShowLiteVersionNotification] =
     useState(false);
@@ -326,9 +359,11 @@ export default function Main({
   const [premiumPrice, setPremiumPrice] = useState(0);
   const { paymentLink } = useContext(PaymentLinkContext);
   const [enableFreeVersion, setEnableFreeVersion] = useState(true);
+  const [hidePremiumButton, setHidePremiumButton] = useState(false);
+  const [shouldAccessAIMIDIHandler, setShouldAccessAIMIDIHandler] =
+    useState(false);
 
   const { isProUser } = useContext(ProUserContext);
-
   const posthog = usePostHog();
 
   const recreateMenu = () => {
@@ -342,6 +377,7 @@ export default function Main({
       undefined,
       isProUser,
       getItem("enable-sound-preference") === "true",
+      getItem("ai-rec-interval-preference"),
     ]);
   };
 
@@ -363,6 +399,12 @@ export default function Main({
     ipcRenderer.on("color_changed", (_, args: any[]) => {
       setItem("color-preference", args[2]);
       setColor(args[2]);
+      ipcRenderer.send("recreate_menu", args);
+    });
+
+    ipcRenderer.on("interval_changed", (_, args: any[]) => {
+      setItem("ai-rec-interval-preference", args[9]);
+      setRecommendationInterval(args[9]);
       ipcRenderer.send("recreate_menu", args);
     });
 
@@ -428,9 +470,40 @@ export default function Main({
     if (WebMidi !== undefined) {
       WebMidi.addListener("connected", handleMidiInputs);
       WebMidi.addListener("disconnected", handleMidiInputs);
+      WebMidi.addListener("connected", handleMidiOutputs);
+      WebMidi.addListener("disconnected", handleMidiOutputs);
 
       handleMidiInputs();
+      handleMidiOutputs();
     }
+  }, []);
+
+  useEffect(() => {
+    const checkForAccessToAIRecommendations = () => {
+      const authToken = getItem("auth-token");
+
+      if (authToken) {
+        const payload = jwt.decode(authToken) as JwtPayload;
+
+        const isProUser = payload.isProUser as boolean;
+        const email = payload.email as string;
+
+        posthog?.identify(email, {
+          email,
+          isProUser,
+        });
+
+        setShouldAccessAIMIDIHandler(
+          posthog.isFeatureEnabled("ai-recommendations")
+        );
+      }
+    };
+
+    checkForAccessToAIRecommendations();
+
+    setInterval(() => {
+      checkForAccessToAIRecommendations();
+    }, 600000); // will check every 10 minutes
   }, []);
 
   useEffect(() => {
@@ -443,6 +516,16 @@ export default function Main({
         setMidiInputs([]);
       } else {
         setMidiInputs(WebMidi.inputs);
+      }
+    }
+  };
+
+  const handleMidiOutputs = () => {
+    if (WebMidi !== undefined) {
+      if (WebMidi.outputs.length === 0) {
+        setMidiOutputs([]);
+      } else {
+        setMidiOutputs(WebMidi.outputs);
       }
     }
   };
@@ -623,7 +706,7 @@ export default function Main({
                           value={{ midiInputs, setMidiInputs }}
                         >
                           <MidiOutputContext.Provider
-                            value={{ midiOutput, setMidiOutput }}
+                            value={{ midiOutputs, setMidiOutputs }}
                           >
                             <ShowPracticeRoomInitContext.Provider
                               value={{
@@ -655,10 +738,16 @@ export default function Main({
                                           setEnableFreeVersion,
                                         }}
                                       >
-                                        <div>
-                                          <NonSSRComponent>
-                                            <UpdateSoftwareNotification />
-                                            {/* {!showPracticeRoomInit &&
+                                        <AIRecommendationIntervalContext.Provider
+                                          value={{
+                                            recommendationInterval,
+                                            setRecommendationInterval,
+                                          }}
+                                        >
+                                          <div>
+                                            <NonSSRComponent>
+                                              <UpdateSoftwareNotification />
+                                              {/* {!showPracticeRoomInit &&
                                         !showPracticeRoom &&
                                         showPracticeRoomButton && (
                                           <div
@@ -685,133 +774,146 @@ export default function Main({
                                             </button>
                                           </div>
                                         )} */}
-                                            <div className="hidden">
-                                              <Menu />
-                                            </div>
-                                            {!showHomePage && (
-                                              <div
-                                                className="cursor-pointer z-20 absolute top-[42px] left-[42px]"
-                                                onClick={() => {
-                                                  setMode("");
-                                                  setShowHomePage(true);
-                                                }}
-                                              >
-                                                <HomeSvg />
+                                              <div className="hidden">
+                                                <Menu />
                                               </div>
-                                            )}
-                                            {(expirationTrialDate !==
-                                              undefined ||
-                                              !isProUser) && (
-                                              <PremiumButton
-                                                isTrialing={
-                                                  new Date(
-                                                    expirationTrialDate
-                                                  ).getTime() /
-                                                    1000 >
-                                                  Math.floor(Date.now() / 1000)
-                                                }
-                                              />
-                                            )}
-                                            {showDiscountPopup && (
-                                              <div
-                                                className={`z-50 absolute rounded-2.5xl w-[477px] h-[389px] left-[440px] top-[140px] border-2`}
-                                                style={{
-                                                  backgroundColor:
-                                                    utils.determineBackgroundColorForSearchModeModal(),
-
-                                                  borderColor:
-                                                    theme === "light-mode"
-                                                      ? lightModeFontColor
-                                                      : darkModeFontColor,
-                                                }}
-                                              >
+                                              {!showHomePage && (
                                                 <div
-                                                  className="z-50 absolute right-[5%] top-[5%] cursor-pointer"
+                                                  className="cursor-pointer z-20 absolute top-[42px] left-[42px]"
                                                   onClick={() => {
-                                                    setItem(
-                                                      "seen-discount-code",
-                                                      true
-                                                    );
-                                                    setShowDiscountPopup(false);
+                                                    setMode("");
+                                                    setShowHomePage(true);
                                                   }}
                                                 >
-                                                  <CancelSymbol />
+                                                  <HomeSvg />
                                                 </div>
-                                                <div className="z-20 absolute top-[-80px] left-[82px]">
-                                                  <DiscountSvg />
-                                                </div>
-                                                <div className="flex flex-col items-center mt-[75px]">
-                                                  <div>
-                                                    <p
-                                                      className={`text-2xl font-bold text-center`}
-                                                      style={{
-                                                        color:
-                                                          utils.determineFontColor(),
-                                                      }}
-                                                    >
-                                                      You’ve been selected!
-                                                    </p>
-                                                  </div>
-                                                  <div>
-                                                    <p
-                                                      className={`text-5xl font-bold text-center mt-4`}
-                                                      style={{
-                                                        color:
-                                                          utils.determineFontColor(),
-                                                      }}
-                                                    >
-                                                      GET 25% OFF APOLLO!
-                                                    </p>
-                                                  </div>
-                                                  <div>
-                                                    <p
-                                                      className={`text-[18px] text-center mt-4`}
-                                                      style={{
-                                                        color:
-                                                          utils.determineFontColor(),
-                                                      }}
-                                                    >
-                                                      Become a premium user
-                                                      today.
-                                                    </p>
-                                                  </div>
-                                                  <div
-                                                    className="mt-4 cursor-pointer flex justify-center items-center rounded-4xl w-[246px] h-[58px]"
-                                                    onClick={() =>
-                                                      shell.openExternal(
-                                                        paymentLink
+                                              )}
+                                              {(expirationTrialDate !==
+                                                undefined ||
+                                                !isProUser) && (
+                                                <div
+                                                  className={`${
+                                                    hidePremiumButton
+                                                      ? "z-0 hidden"
+                                                      : ""
+                                                  }`}
+                                                >
+                                                  {" "}
+                                                  <PremiumButton
+                                                    isTrialing={
+                                                      new Date(
+                                                        expirationTrialDate
+                                                      ).getTime() /
+                                                        1000 >
+                                                      Math.floor(
+                                                        Date.now() / 1000
                                                       )
                                                     }
-                                                    style={{
-                                                      backgroundColor:
-                                                        utils.determineBackgroundColorReverse(),
+                                                  />
+                                                </div>
+                                              )}
+                                              {showDiscountPopup && (
+                                                <div
+                                                  className={`z-50 absolute rounded-2.5xl w-[477px] h-[389px] left-[440px] top-[140px] border-2`}
+                                                  style={{
+                                                    backgroundColor:
+                                                      utils.determineBackgroundColorForSearchModeModal(),
+
+                                                    borderColor:
+                                                      theme === "light-mode"
+                                                        ? lightModeFontColor
+                                                        : darkModeFontColor,
+                                                  }}
+                                                >
+                                                  <div
+                                                    className="z-50 absolute right-[5%] top-[5%] cursor-pointer"
+                                                    onClick={() => {
+                                                      setItem(
+                                                        "seen-discount-code",
+                                                        true
+                                                      );
+                                                      setShowDiscountPopup(
+                                                        false
+                                                      );
                                                     }}
                                                   >
-                                                    <p
-                                                      className={`text-[20px] text-center`}
-                                                      style={{
-                                                        color:
-                                                          utils.determineFontColorReverse(),
-                                                      }}
-                                                    >
-                                                      Redeem Now
-                                                    </p>
+                                                    <CancelSymbol />
                                                   </div>
-                                                  <div>
-                                                    <p
-                                                      className={`text-[14px] font-bold text-center mt-2`}
+                                                  <div className="z-20 absolute top-[-80px] left-[82px]">
+                                                    <DiscountSvg />
+                                                  </div>
+                                                  <div className="flex flex-col items-center mt-[75px]">
+                                                    <div>
+                                                      <p
+                                                        className={`text-2xl font-bold text-center`}
+                                                        style={{
+                                                          color:
+                                                            utils.determineFontColor(),
+                                                        }}
+                                                      >
+                                                        You’ve been selected!
+                                                      </p>
+                                                    </div>
+                                                    <div>
+                                                      <p
+                                                        className={`text-5xl font-bold text-center mt-4`}
+                                                        style={{
+                                                          color:
+                                                            utils.determineFontColor(),
+                                                        }}
+                                                      >
+                                                        GET 25% OFF APOLLO!
+                                                      </p>
+                                                    </div>
+                                                    <div>
+                                                      <p
+                                                        className={`text-[18px] text-center mt-4`}
+                                                        style={{
+                                                          color:
+                                                            utils.determineFontColor(),
+                                                        }}
+                                                      >
+                                                        Become a premium user
+                                                        today.
+                                                      </p>
+                                                    </div>
+                                                    <div
+                                                      className="mt-4 cursor-pointer flex justify-center items-center rounded-4xl w-[246px] h-[58px]"
+                                                      onClick={() =>
+                                                        shell.openExternal(
+                                                          paymentLink
+                                                        )
+                                                      }
                                                       style={{
-                                                        color:
-                                                          utils.determineFontColor(),
+                                                        backgroundColor:
+                                                          utils.determineBackgroundColorReverse(),
                                                       }}
                                                     >
-                                                      OFFER ENDS IN 24 HOURS.
-                                                    </p>
+                                                      <p
+                                                        className={`text-[20px] text-center`}
+                                                        style={{
+                                                          color:
+                                                            utils.determineFontColorReverse(),
+                                                        }}
+                                                      >
+                                                        Redeem Now
+                                                      </p>
+                                                    </div>
+                                                    <div>
+                                                      <p
+                                                        className={`text-[14px] font-bold text-center mt-2`}
+                                                        style={{
+                                                          color:
+                                                            utils.determineFontColor(),
+                                                        }}
+                                                      >
+                                                        OFFER ENDS IN 24 HOURS.
+                                                      </p>
+                                                    </div>
                                                   </div>
                                                 </div>
-                                              </div>
-                                            )}
-                                            {/* <div className="hidden absolute top-[3%] left-[3%]">
+                                              )}
+                                              {/* <div className="hidden absolute top-[3%] left-[3%]">
                                               <div className="flex gap-[10px]">
                                                 <div>
                                                   <MIDISetup
@@ -825,70 +927,82 @@ export default function Main({
                                                 </div>
                                               </div>
                                             </div> */}
-                                            <div
-                                              className={` ${
-                                                showDiscountPopup &&
-                                                `opacity-20 pointer-events-none`
-                                              }`}
-                                            >
-                                              {showPricingTable && (
-                                                <PricingTable
-                                                  price={premiumPrice}
-                                                  setShowPricingTable={
-                                                    setShowPricingTable
-                                                  }
-                                                />
-                                              )}
-                                              {!showPricingTable &&
-                                                (showHomePage ? (
-                                                  expirationTrialDate ===
-                                                    undefined ||
-                                                  Math.floor(
-                                                    new Date(
-                                                      expirationTrialDate
-                                                    ).getTime() / 1000
-                                                  ) >
+                                              <div
+                                                className={` ${
+                                                  showDiscountPopup &&
+                                                  `opacity-20 pointer-events-none`
+                                                }`}
+                                              >
+                                                {showPricingTable && (
+                                                  <PricingTable
+                                                    price={premiumPrice}
+                                                    setShowPricingTable={
+                                                      setShowPricingTable
+                                                    }
+                                                  />
+                                                )}
+                                                {!showPricingTable &&
+                                                  (showHomePage ? (
+                                                    (expirationTrialDate ===
+                                                      undefined &&
+                                                      enableFreeVersion) ||
                                                     Math.floor(
-                                                      Date.now() / 1000
-                                                    ) ||
-                                                  enableFreeVersion ? (
-                                                    <HomePage
-                                                      expirationTrialDate={
+                                                      new Date(
                                                         expirationTrialDate
+                                                      ).getTime() / 1000
+                                                    ) >
+                                                      Math.floor(
+                                                        Date.now() / 1000
+                                                      ) ||
+                                                    enableFreeVersion ||
+                                                    isProUser ? (
+                                                      <HomePage
+                                                        expirationTrialDate={
+                                                          expirationTrialDate
+                                                        }
+                                                      />
+                                                    ) : (
+                                                      <BuyApollo />
+                                                    )
+                                                  ) : mode === "detect mode" ? (
+                                                    isProUser ? (
+                                                      shouldAccessAIMIDIHandler ? (
+                                                        <AIMIDIHandler />
+                                                      ) : (
+                                                        <MIDIHandler
+                                                          socket={null}
+                                                          roomName={null}
+                                                          playAccess={null}
+                                                        />
+                                                      )
+                                                    ) : shouldAccessAIMIDIHandler ? (
+                                                      <AIMIDIHandler />
+                                                    ) : (
+                                                      <FreeMIDIHandler />
+                                                    )
+                                                  ) : mode === "search mode" ? (
+                                                    <SearchMode
+                                                      noteOnColor={color}
+                                                      onSearch={handleSearch}
+                                                      setHidePremiumButton={
+                                                        setHidePremiumButton
                                                       }
                                                     />
                                                   ) : (
-                                                    <BuyApollo />
-                                                  )
-                                                ) : mode === "detect mode" ? (
-                                                  isProUser || true ? (
-                                                    <MIDIHandler
-                                                      socket={null}
-                                                      roomName={null}
-                                                      playAccess={null}
-                                                    />
-                                                  ) : (
-                                                    <FreeMIDIHandler />
-                                                  )
-                                                ) : mode === "search mode" ? (
-                                                  <SearchMode
-                                                    noteOnColor={color}
-                                                    onSearch={handleSearch}
+                                                    <PracticeModeInit />
+                                                  ))}
+                                              </div>
+                                              {showProfileModal &&
+                                                !showPricingTable && (
+                                                  <ProfileModal
+                                                    setShowProfileModal={
+                                                      setShowProfileModal
+                                                    }
                                                   />
-                                                ) : (
-                                                  <PracticeModeInit />
-                                                ))}
-                                            </div>
-                                            {showProfileModal &&
-                                              !showPricingTable && (
-                                                <ProfileModal
-                                                  setShowProfileModal={
-                                                    setShowProfileModal
-                                                  }
-                                                />
-                                              )}
-                                          </NonSSRComponent>
-                                        </div>
+                                                )}
+                                            </NonSSRComponent>
+                                          </div>
+                                        </AIRecommendationIntervalContext.Provider>
                                       </EnableFreeVersionContext.Provider>
                                     </EnableSoundContext.Provider>
                                   </ShowPricingTableContext.Provider>

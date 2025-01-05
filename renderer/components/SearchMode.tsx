@@ -26,13 +26,15 @@ import ArrowForwardSymbol from "./symbols/ArrowForwardSymbol";
 import CancelSymbol from "./symbols/CancelSymbol";
 import SearchSymbol from "./symbols/SearchSymbol";
 import React from "react";
+import { isStatusOff, isStatusOn } from "../utils/globalVars";
 
 interface Props {
   noteOnColor: string;
   onSearch: (hideButton: boolean) => void;
+  setHidePremiumButton: (hideButton: boolean) => void;
 }
 
-const SearchMode = ({ noteOnColor, onSearch }: Props) => {
+const SearchMode = ({ noteOnColor, onSearch, setHidePremiumButton }: Props) => {
   const [selectedNotes, setSelectedNotes] = useState<number[]>([]);
   const [searchResults, setSearchResults] = useState<number[][]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -175,7 +177,7 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
   function handleMIDIMessage(event: any) {
     if (event.data.length === 3) {
       const [status, pitch, velocity] = event.data;
-      if (status === 144 && velocity !== 0) {
+      if (isStatusOn(status) && velocity !== 0) {
         midiNumbers.current = Array.from(
           new Set(midiNumbers.current.concat(pitch))
         ).sort((a, b) => {
@@ -184,7 +186,10 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
 
         selectedNotesRef.current = midiNumbers.current;
         setSelectedNotes(midiNumbers.current);
-      } else if (status === 128 || (status === 144 && velocity === 0)) {
+      } else if (
+        isStatusOff(status) ||
+        (isStatusOn(status) && velocity === 0)
+      ) {
         midiNumbers.current = midiNumbers.current.filter(
           (value) => value !== pitch
         );
@@ -254,6 +259,7 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
 
       // setShowProfileIcon(false);
 
+      setHidePremiumButton(true);
       searchResultsRef.current = values;
       allowNavigation.current = true;
       setCurrentChord(mainChord);
@@ -265,6 +271,8 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
   };
 
   const cancelSearch = () => {
+    setHidePremiumButton(false);
+
     // setShowProfileIcon(true);
     setSearchResults([]);
     selectedNotesRef.current = [];
@@ -370,6 +378,14 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
 
   return (
     <div>
+      {searchResults.length > 0 && (
+        <div
+          className="z-50 absolute right-[5%] top-[5%] cursor-pointer"
+          onClick={cancelSearch}
+        >
+          <CancelSymbol />
+        </div>
+      )}
       {showPopupModal && (
         <div className="flex items-center justify-center h-screen">
           <div
@@ -529,7 +545,7 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
           </div>
         </div>
       )}
-      <div className={`fixed inset-0 ${showPopupModal && `opacity-20`}`}>
+      <div className={`fixed h-screen ${showPopupModal ? "opacity-20" : ""}`}>
         <div
           className={`${
             showPopupModal && "hidden"
@@ -557,12 +573,6 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
           <>
             {searchResults.length > 0 ? (
               <div>
-                <div
-                  className="z-50 absolute right-[5%] top-[5%] cursor-pointer"
-                  onClick={cancelSearch}
-                >
-                  <CancelSymbol />
-                </div>
                 <div className="flex justify-center items-center absolute w-screen h-[80%]">
                   <div
                     className="absolute left-[5%]"
@@ -634,7 +644,7 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
                   </div>
                 </div>
                 {searchResults.length !== 1 && (
-                  <div className="absolute bottom-[150px] text-center w-full">
+                  <div className="absolute w-screen bottom-[150px] text-center">
                     <div
                       className="text-lg"
                       style={{
@@ -651,7 +661,7 @@ const SearchMode = ({ noteOnColor, onSearch }: Props) => {
                 )}
               </div>
             ) : (
-              <div className="flex flex-col items-center absolute top-[40%] w-full gap-[20px]">
+              <div className="flex flex-col items-center absolute top-[40%] w-screen gap-[20px]">
                 <div style={{ cursor: "pointer" }} onClick={cancelSearch}>
                   <CancelSymbol />
                 </div>

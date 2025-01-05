@@ -1,7 +1,7 @@
 import React from "react";
 import { getItem } from "../../utils/localStorage";
 
-const DetectModeSvg = () => {
+const HarmonyModeSvg = () => {
   return getItem("theme-preference") === "light-mode" ? (
     <svg
       width="117"
@@ -88,4 +88,4 @@ const DetectModeSvg = () => {
   );
 };
 
-export default DetectModeSvg;
+export default HarmonyModeSvg;

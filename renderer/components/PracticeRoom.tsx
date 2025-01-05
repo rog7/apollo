@@ -42,7 +42,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
   const [color, setColor] = useState(getItem("color-preference"));
   const [pitchValues, setPitchValues] = useState([]);
   const pitchesRef = useRef<Set<number>>(new Set());
-  const { midiOutput } = useContext(MidiOutputContext);
+  const { midiOutputs } = useContext(MidiOutputContext);
   const [numOfViewers, setNumOfViewers] = useState(0);
   const [modalSetting, setModalSetting] = useState("Permissions");
   const [guestList, setGuestList] = useState<GuestInfo[]>([]);
@@ -127,7 +127,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
     socket.send(JSON.stringify(obj));
   };
 
-  const handleMidi = (midiOutput: Output, data: any) => {
+  const handleMidi = (data: any) => {
     setColor(data.note_on_color);
     if (data.midi_message[0] === 144) {
       pitchesRef.current.add(data.midi_message[1]);
@@ -146,14 +146,19 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
       );
     }
 
-    if (midiOutput !== null) {
-      midiOutput.send([
-        data.midi_message[0],
-        data.midi_message[1],
-        data.midi_message[2],
-      ]);
+    if (midiOutputs.length > 0) {
+      midiOutputs.forEach((output) =>
+        output.send([
+          data.midi_message[0],
+          data.midi_message[1],
+          data.midi_message[2],
+        ])
+      );
 
-      if (data.midi_message[0] === 0xb0 && data.midi_message[1] === 64) {
+      if (
+        (data.midi_message[0] === 176 || data.midi_message[0] === 186) &&
+        data.midi_message[1] === 64
+      ) {
         const pedalValue = data.midi_message[2]; // Pedal value ranging from 0 to 127
 
         if (pedalValue === 127) {
@@ -229,7 +234,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
           };
 
           await delay(message[3]);
-          handleMidi(midiOutput, res);
+          handleMidi(res);
         });
       } else {
         midiBuffer.current.concat(data);
@@ -514,7 +519,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
         </div>
       )}
       <>
-        {midiOutput === null && !isHost && (
+        {/* {midiOutputs === null && !isHost && (
           <div
             className="text-center mt-2"
             style={{
@@ -524,7 +529,7 @@ const PracticeRoom = ({ closePracticeRoom, isHost, socket }: Props) => {
           >
             Note: select a midi output channel to enable audio playback
           </div>
-        )}
+        )} */}
         <div className={!isHost ? "hidden" : ""}>
           <MIDIHandler
             socket={socket}

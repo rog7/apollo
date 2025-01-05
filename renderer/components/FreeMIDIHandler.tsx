@@ -1,13 +1,17 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { WebMidi } from "webmidi";
-import Piano from "./Piano";
 import { detect } from "@tonaljs/chord-detect";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Chord, Note } from "tonal";
+import { WebMidi } from "webmidi";
 import { KeyContext, MidiInputContext, ThemeContext } from "../pages/main";
 import convertChordToCorrectKey from "../utils/chordConversion";
+import {
+  isControlChangeMessage,
+  isStatusOff,
+  isStatusOn,
+} from "../utils/globalVars";
 import { getItem } from "../utils/localStorage";
 import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
-import MIDIInputSymbol from "./symbols/MIDIInputSymbol";
+import Piano from "./Piano";
 
 const FreeMIDIHandler = () => {
   const midiNumbers = useRef<number[]>([]);
@@ -44,7 +48,7 @@ const FreeMIDIHandler = () => {
   function handleMIDIMessage(event: any) {
     if (event.data.length === 3) {
       const [status, pitch, velocity] = event.data;
-      if (status === 144 && velocity !== 0) {
+      if (isStatusOn(status) && velocity !== 0) {
         midiNumbers.current = Array.from(
           new Set(midiNumbers.current.concat(pitch))
         ).sort((a, b) => {
@@ -63,6 +67,7 @@ const FreeMIDIHandler = () => {
 
         if (chord.current.length > 0) {
           try {
+            if (Chord.get(chord.current).quality == "Unknown") return;
             if (!chord.current.includes("sus")) {
               chordQuality.current = Chord.get(chord.current).quality;
             } else {
@@ -80,7 +85,10 @@ const FreeMIDIHandler = () => {
           );
 
         setPitchValues(midiNumbers.current);
-      } else if (status === 128 || (status === 144 && velocity === 0)) {
+      } else if (
+        isStatusOff(status) ||
+        (isStatusOn(status) && velocity === 0)
+      ) {
         midiNumbers.current = midiNumbers.current.filter(
           (value) => value !== pitch
         );
@@ -97,6 +105,7 @@ const FreeMIDIHandler = () => {
 
         if (chord.current.length > 0) {
           try {
+            if (Chord.get(chord.current).quality == "Unknown") return;
             if (!chord.current.includes("sus")) {
               chordQuality.current = Chord.get(chord.current).quality;
             } else {
@@ -121,10 +130,10 @@ const FreeMIDIHandler = () => {
   }
 
   function handleSustainPedalMessage(event: any) {
-    if (event.data[0] === 0xb0 && event.data[1] === 64) {
+    if (isControlChangeMessage(event.data[0], event.data[1])) {
       const pedalValue = event.data[2]; // Pedal value ranging from 0 to 127
 
-      if (pedalValue === 127) {
+      if (pedalValue >= 64) {
         setIsFootPedalPressed(true);
       } else {
         setIsFootPedalPressed(false);

@@ -1,21 +1,19 @@
+import _ from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Manager, Socket } from "socket.io-client";
-import { Chord, ChordType } from "tonal";
 import {
   ProfileImageUrlContext,
   ProUserContext,
   UsernameContext,
 } from "../pages/home";
+import { ShowPricingTableContext } from "../pages/main";
 import * as utils from "../utils/determineColors";
+import { generateChords } from "../utils/generateChords";
 import { API_BASE_URL } from "../utils/globalVars";
 import MultiPlayerMIDIHandler from "./MultiplayerMidiHandler";
 import BackArrowSvg from "./svg/BackArrowSvg";
 import EnterModeArrow from "./svg/EnterModeArrow";
 import PracticeModeSvgTop from "./svg/PracticeModeSvgTop";
-import _ from "lodash";
-import { ShowPricingTableContext } from "../pages/main";
-import { generateChords } from "../utils/generateChords";
-import React from "react";
 
 interface Props {
   onGoingBackToSetup: () => void;

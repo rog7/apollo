@@ -8,10 +8,9 @@ import {
 } from "../pages/main";
 import * as utils from "../utils/determineColors";
 import { setItem } from "../utils/localStorage";
-import DetectModeSvg from "./svg/DetectModeSvg";
 import EnterModeArrow from "./svg/EnterModeArrow";
+import HarmonyModeSvg from "./svg/HarmonyModeSvg";
 import PracticeModeSvg from "./svg/PracticeModeSvg";
-import SearchModeSvg from "./svg/SearchModeSvg";
 
 interface Props {
   expirationTrialDate: Date | undefined;
@@ -55,7 +54,53 @@ const HomePage = ({ expirationTrialDate }: Props) => {
           Choose Your Mode
         </p>
         <div
-          className={`cursor-pointer relative mt-[32px] rounded-2.5xl w-[711px] h-[188px]`}
+          className={`cursor-pointer relative mt-[100px] rounded-2.5xl w-[711px] h-[188px]`}
+          onClick={() => handleModeSelection("detect mode")}
+          style={{
+            backgroundColor: utils.determineBackgroundColorReverse(),
+          }}
+        >
+          <div
+            className={`absolute top-[3px] left-[3px] rounded-2.5xl w-[702px] h-[178px] p-[21px]`}
+            style={{
+              backgroundColor: utils.determineBackgroundColorForCard(),
+            }}
+          >
+            <div className="flex justify-between">
+              <div className="flex flex-col gap-[5px]">
+                <div>
+                  <p
+                    className={`text-3xl font-bold`}
+                    style={{
+                      color: utils.determineFontColor(),
+                    }}
+                  >
+                    Harmony Mode
+                  </p>
+                </div>
+                <div>
+                  <p
+                    style={{
+                      color: utils.determineFontColor(),
+                    }}
+                  >
+                    Meet Oscar: Your AI-powered harmony expert.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-[5px]">
+                <div className="mt-[10px] mr-[12px] scale-125">
+                  <HarmonyModeSvg />
+                </div>
+                <div className="mt-[100px]">
+                  <EnterModeArrow />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className={`cursor-pointer relative mt-[24px] rounded-2.5xl w-[711px] h-[188px]`}
           onClick={() => handleModeSelection("practice mode")}
           style={{
             backgroundColor: utils.determineBackgroundColorReverse(),
@@ -100,7 +145,7 @@ const HomePage = ({ expirationTrialDate }: Props) => {
             </div>
           </div>
         </div>
-        <div className="flex mt-[24px] gap-[21px]">
+        {/* <div className="flex mt-[24px] gap-[21px]">
           <div
             className="cursor-pointer premium-feature relative rounded-2.5xl w-[302px] h-[239px]"
             style={{
@@ -169,7 +214,7 @@ const HomePage = ({ expirationTrialDate }: Props) => {
                         color: utils.determineFontColor(),
                       }}
                     >
-                      Detect Mode
+                      Harmony Mode
                     </p>
                   </div>
                   <div>
@@ -184,7 +229,7 @@ const HomePage = ({ expirationTrialDate }: Props) => {
                 </div>
                 <div className="flex justify-between mt-[10px]">
                   <div>
-                    <DetectModeSvg />
+                    <HarmonyModeSvg />
                   </div>
                   <div className="flex items-end">
                     <EnterModeArrow />
@@ -193,7 +238,7 @@ const HomePage = ({ expirationTrialDate }: Props) => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
       {expirationTrialDate !== undefined &&
         (new Date(expirationTrialDate).getTime() / 1000 >

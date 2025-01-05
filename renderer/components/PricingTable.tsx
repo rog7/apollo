@@ -37,11 +37,11 @@ export default function PricingTable({ price, setShowPricingTable }: Props) {
       description:
         "Perfect for pianists who want to achieve effortless music creation.",
       features: [
+        "Unlimited access to AI harmony expert",
         "Advanced chord detection",
         "Comprehensive practice assessment",
         "Enhanced customization settings",
         "Priority updates",
-        "Exclusive access to chord library",
         "Unlimited feature requests",
       ],
       featured: true,

@@ -10,6 +10,11 @@ import { darkModeFontColor, lightModeFontColor } from "../utils/styles";
 import Piano from "./Piano";
 import EnterModeArrow from "./svg/EnterModeArrow";
 import PracticeModeSvgTop from "./svg/PracticeModeSvgTop";
+import {
+  isControlChangeMessage,
+  isStatusOff,
+  isStatusOn,
+} from "../utils/globalVars";
 
 interface Props {
   isSoloPlay: boolean;
@@ -105,13 +110,16 @@ const SoloPlayMIDIHandler = ({
   function handleMIDIMessage(event: any) {
     if (event.data.length === 3) {
       const [status, pitch, velocity] = event.data;
-      if (status === 144 && velocity !== 0) {
+      if (isStatusOn(status) && velocity !== 0) {
         midiNumbers.current = Array.from(
           new Set(midiNumbers.current.concat(pitch))
         ).sort((a, b) => {
           return a - b;
         });
-      } else if (status === 128 || (status === 144 && velocity === 0)) {
+      } else if (
+        isStatusOff(status) ||
+        (isStatusOn(status) && velocity === 0)
+      ) {
         midiNumbers.current = midiNumbers.current.filter(
           (value) => value !== pitch
         );
@@ -146,10 +154,10 @@ const SoloPlayMIDIHandler = ({
   }
 
   function handleSustainPedalMessage(event: any) {
-    if (event.data[0] === 0xb0 && event.data[1] === 64) {
+    if (isControlChangeMessage(event.data[0], event.data[1])) {
       const pedalValue = event.data[2]; // Pedal value ranging from 0 to 127
 
-      if (pedalValue === 127) {
+      if (pedalValue >= 64) {
         setIsFootPedalPressed(true);
       } else {
         setIsFootPedalPressed(false);

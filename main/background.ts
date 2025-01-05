@@ -97,6 +97,39 @@ if (isProd) {
         label: "Options",
         submenu: [
           {
+            label: "AI Recommendation Frequency",
+            click: () => {
+              prompt({
+                title: "How often to show AI recommendations",
+                label: "Interval in minutes:",
+                value: args[9],
+                type: "input",
+                inputAttrs: {
+                  type: "number",
+                  min: "1",
+                  max: "240",
+                },
+              })
+                .then((result) => {
+                  if (result) {
+                    const interval = parseInt(result, 10);
+                    if (!isNaN(interval) && interval > 0) {
+                      args = [...args.slice(0, 9), interval];
+                      mainWindow.webContents.send("interval_changed", args);
+                    } else {
+                      console.error(
+                        "Invalid input: Please enter a valid number."
+                      );
+                    }
+                  }
+                })
+                .catch((err) => {
+                  console.error(err);
+                });
+            },
+            accelerator: "CmdOrCtrl+Shift+R",
+          },
+          {
             label: "Theme",
             submenu: [
               {
