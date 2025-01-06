@@ -67,10 +67,12 @@ const FreeMIDIHandler = () => {
 
         if (chord.current.length > 0) {
           try {
-            if (Chord.get(chord.current).quality == "Unknown") return;
-            if (!chord.current.includes("sus")) {
+            if (
+              !chord.current.includes("sus") &&
+              !(Chord.get(chord.current).quality == "Unknown")
+            ) {
               chordQuality.current = Chord.get(chord.current).quality;
-            } else {
+            } else if (!(Chord.get(chord.current).quality == "Unknown")) {
               chordQuality.current = "Suspended";
             }
           } catch (e) {
@@ -105,10 +107,12 @@ const FreeMIDIHandler = () => {
 
         if (chord.current.length > 0) {
           try {
-            if (Chord.get(chord.current).quality == "Unknown") return;
-            if (!chord.current.includes("sus")) {
+            if (
+              !chord.current.includes("sus") &&
+              !(Chord.get(chord.current).quality == "Unknown")
+            ) {
               chordQuality.current = Chord.get(chord.current).quality;
-            } else {
+            } else if (!(Chord.get(chord.current).quality == "Unknown")) {
               chordQuality.current = "Suspended";
             }
           } catch (e) {

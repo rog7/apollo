@@ -160,7 +160,6 @@ const MIDIHandler = () => {
       }
     };
 
-    console.log({ playRecommendation, "isPausedRef: ": isPausedRef.current });
     if (playRecommendation && !isPausedRef.current) {
       shouldUserBeAbleToTriggerMidiRef.current = false;
       processMidiMessages().then(() => {
